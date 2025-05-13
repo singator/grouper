@@ -22,16 +22,16 @@ pacman::p_load(
 # ------------------------------------------------------------------------------
 
 #' GENERATE STUDENT-GROUP MATRIX (m) and STUDENT-DEMOGRAPHIC MATRIX (df)
-set.seed(123) 
+set.seed(123)
 
 # Step 1: Generate group sizes that sum to 100, with exactly 30 groups
 generate_group_sizes <- function(N, G, min_size = 1, max_size = 5) {
   repeat {
     sizes <- sample(min_size:max_size, G, replace = TRUE)
     diff <- sum(sizes) - N
-    
+
     if (diff == 0) return(sizes)
-    
+
     # Adjust the group sizes
     if (diff > 0) {
       # Need to reduce total size
@@ -48,7 +48,7 @@ generate_group_sizes <- function(N, G, min_size = 1, max_size = 5) {
         sizes[increasable[i]] <- sizes[increasable[i]] + 1
       }
     }
-    
+
     if (all(sizes >= min_size & sizes <= max_size) && sum(sizes) == N) {
       return(sizes)
     }
@@ -81,10 +81,12 @@ d <- df %>%
   mutate(across(where(is.character), as.factor)) %>%
   daisy(metric="gower") %>%
   as.matrix()
+# d is dissimilarity matrix for the df generated.
+# d is 30x30
 
 #' OBJECTIVE FUNCTION WEIGHTS
-w1 <- 0.5 # DIVERSITY
-w2 <- 0.5 # SKILL VARIABILITY
+w1 <- 0.5 # DIVERSITY - uses d matrix
+w2 <- 0.5 # SKILL VARIABILITY - uses?
 
 #' NUMBER OF TOPICS
 T <- 5
@@ -128,7 +130,7 @@ model <- MIPModel() %>%
     #' MAXIMISE DIVERSITY
     w1*sum_over(m[i,g]*m[j,g]*x[g,t,r]*d[i,j], i=1:(N-1), j=(i+1):N, g=1:G, t=1:T, r=1:R)+
       #' MINIMIZE SKILL VARIABILITY
-      w2*(smin-smax), 
+      w2*(smin-smax),
                 "max") %>%
   #' DEFINE CONSTRAINTS (EACH GROUP ASSIGNED A TOPIC-REP)
   add_constraint(sum_over(x[g,t,r], t=1:T, r=1:R)==1, g=1:G) %>%
