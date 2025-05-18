@@ -1,3 +1,4 @@
+# check this out: https://github.com/odow/group-allocator
 library(dplyr)
 
 library(cluster)
