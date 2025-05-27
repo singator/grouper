@@ -122,18 +122,23 @@ rmax <- R
 model <- MIPModel() %>%
   #' DEFINE DECISION VARIABLES
   add_variable(x[g,t,r], g=1:G, t=1:T, r=1:R, type="binary") %>%
+  add_variable(z[i,j,t,r], i=1:(N-1), j=(i+1):N, t=1:T, r=1:R, type="binary") %>%
   add_variable(a[t,r], t=1:T, r=1:R, type="binary") %>%
   add_variable(smin, type="continuous", lb=0) %>%
   add_variable(smax, type="continuous", lb=0) %>%
   #' DEFINE OBJECTIVE FUNCTION
   set_objective(
     #' MAXIMISE DIVERSITY
-    w1*sum_over(m[i,g]*m[j,g]*x[g,t,r]*d[i,j], i=1:(N-1), j=(i+1):N, g=1:G, t=1:T, r=1:R)+
+    w1*sum_over(z[i,j,t,r]*d[i,j], i=1:(N-1), j=(i+1):N, t=1:T, r=1:R)+
       #' MINIMIZE SKILL VARIABILITY
       w2*(smin-smax),
                 "max") %>%
   #' DEFINE CONSTRAINTS (EACH GROUP ASSIGNED A TOPIC-REP)
   add_constraint(sum_over(x[g,t,r], t=1:T, r=1:R)==1, g=1:G) %>%
+  #' DEFINE CONSTRAINTS (WHETHER 2 STUDENTS IN SAME TOPIC-REP)
+  add_constraint(z[i,j,t,r]<=sum_over(m[i,g]*x[g,t,r], g=1:G), i=1:(N-1), j=(i+1):N, t=1:T, r=1:R) %>%
+  add_constraint(z[i,j,t,r]<=sum_over(m[j,g]*x[g,t,r], g=1:G), i=1:(N-1), j=(i+1):N, t=1:T, r=1:R) %>%
+  add_constraint(z[i,j,t,r]>=sum_over(m[i,g]*x[g,t,r], g=1:G)+sum_over(m[j,g]*x[g,t,r], g=1:G)-1, i=1:(N-1), j=(i+1):N, t=1:T, r=1:R) %>%
   #' DEFINE CONSTRAINTS (MIN AND MAX NO. OF REPETITIONS PER TOPIC)
   add_constraint(a[t,r]>=x[g,t,r], g=1:G, t=1:T, r=1:R) %>%
   add_constraint(a[t,r]<=sum_over(x[g,t,r], g=1:G), t=1:T, r=1:R) %>%
@@ -145,6 +150,34 @@ model <- MIPModel() %>%
   #' DEFINE CONSTRAINTS (SKILL VARIABILITY)
   add_constraint(sum_over(m[i,g]*x[g,t,r]*s[i], i=1:N, g=1:G)>=smin, t=1:T, r=1:R) %>%
   add_constraint(sum_over(m[i,g]*x[g,t,r]*s[i], i=1:N, g=1:G)<=smax, t=1:T, r=1:R)
+
+# Old model (incorrect)
+#model <- MIPModel() %>%
+#  #' DEFINE DECISION VARIABLES
+#  add_variable(x[g,t,r], g=1:G, t=1:T, r=1:R, type="binary") %>%
+#  add_variable(a[t,r], t=1:T, r=1:R, type="binary") %>%
+#  add_variable(smin, type="continuous", lb=0) %>%
+#  add_variable(smax, type="continuous", lb=0) %>%
+#  #' DEFINE OBJECTIVE FUNCTION
+#  set_objective(
+#    #' MAXIMISE DIVERSITY
+#    w1*sum_over(m[i,g]*m[j,g]*x[g,t,r]*d[i,j], i=1:(N-1), j=(i+1):N, g=1:G, t=1:T, r=1:R)+
+#      #' MINIMIZE SKILL VARIABILITY
+#      w2*(smin-smax),
+#                "max") %>%
+#  #' DEFINE CONSTRAINTS (EACH GROUP ASSIGNED A TOPIC-REP)
+#  add_constraint(sum_over(x[g,t,r], t=1:T, r=1:R)==1, g=1:G) %>%
+#  #' DEFINE CONSTRAINTS (MIN AND MAX NO. OF REPETITIONS PER TOPIC)
+#  add_constraint(a[t,r]>=x[g,t,r], g=1:G, t=1:T, r=1:R) %>%
+#  add_constraint(a[t,r]<=sum_over(x[g,t,r], g=1:G), t=1:T, r=1:R) %>%
+#  add_constraint(sum_over(a[t,r], r=1:R)>=rmin, t=1:T) %>%
+#  add_constraint(sum_over(a[t,r], r=1:R)<=rmax, t=1:T) %>%
+#  #' DEFINE CONSTRAINTS (MIN AND MAX NO. OF STUDENTS PER TOPIC-REPETITION)
+#  add_constraint(sum_over(m[i,g]*x[g,t,r], i=1:N, g=1:G)>=a[t,r]*nmin[t,r], t=1:T, r=1:R) %>%
+#  add_constraint(sum_over(m[i,g]*x[g,t,r], i=1:N, g=1:G)<=a[t,r]*nmax[t,r], t=1:T, r=1:R) %>%
+#  #' DEFINE CONSTRAINTS (SKILL VARIABILITY)
+#  add_constraint(sum_over(m[i,g]*x[g,t,r]*s[i], i=1:N, g=1:G)>=smin, t=1:T, r=1:R) %>%
+#  add_constraint(sum_over(m[i,g]*x[g,t,r]*s[i], i=1:N, g=1:G)<=smax, t=1:T, r=1:R)
 
 # ------------------------------------------------------------------------------
 # ---------- SOLVE MIP MODEL ---------------------------------------------------
