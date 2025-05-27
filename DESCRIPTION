@@ -19,3 +19,11 @@ Suggests:
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+Imports: 
+    cluster,
+    magrittr,
+    ompr,
+    ompr.roi,
+    ROI.plugin.glpk,
+    ROI.plugin.gurobi,
+    yaml
