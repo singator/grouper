@@ -1,0 +1,132 @@
+---
+title: "Maximising Diversity and Balancing Skill"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Maximising Diversity and Balancing Skill}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(groupr)
+```
+
+# Model introduction
+
+Consider a situation where an instructor wishes to divide students into groups.
+Each group will be allocated a topic $t$, from a pool of topics $1,\ldots,T$. It
+is possible that each topic $t$ is repeated $R_t$ times across the class. In
+total, there are $N$ students in the class.
+
+Suppose that students form their own groups, which they submit through a survey
+form. In total there are $G$ groups; each student appears in exactly 1 group.
+
+In addition, we have the following information about each student:
+
+1.   Information that can be used to compute dissimilarities between pairs of 
+     students. Examples are: the major of the student (STEM vs. non-STEM), gender,
+     year-of-study, etc.
+2.   Information on the skill level pertinent to your class, or to the problem
+     they will be working on.
+
+This model allows you to maximise the diversity within a group and minimise the
+difference in skill within groups.
+
+# Objective function
+
+The overall objective function can be written as:
+
+$$
+\max \quad w_1 \left( \sum_{i=1}^{N-1} \sum_{j=i+1}^N \sum_{t=1}^T 
+                      \sum_{r=1}^{R_t} z_{ijtr} \cdot d_{ij} \right) + 
+           w_2 (s_{min} - s_{max})
+$$
+
+where $w_1$ and $w_2$ are weights. They indicate which half of the objective 
+function should be given priority.
+
+# Constraints 
+
+## Group to topic-repetition combination
+
+First, let us introduce the decision variable of interest:
+
+\begin{equation}
+x_{gtr} = \begin{cases}
+1 & \text{if group $g$ is assigned to repetition $r$ of topic $t$} \\
+0 & \text{otherwise}
+\end{cases}
+\end{equation}
+
+This constraint represents the need for each group to be assigned to exactly one
+topic-repetition combination. 
+
+$$
+\sum_{t=1}^T \sum_{r=1}^{R_t} x_{gtr} = 1, \quad \forall g
+$$
+
+## Defining $z_{ijtr}$
+
+$z_{ijtr}$ is a binary variable, used to pick up whether the pairwise dissimilarity 
+between student $i$ and student $j$ should be included in the objective function
+calculation.
+
+\begin{eqnarray}
+z_{ijtr} &\le& \sum_{g=1}^G m_{ig} \cdot x_{gtr}, \quad \forall i,j,t,r \\
+z_{ijtr} &\le& \sum_{g=1}^G m_{jg} \cdot x_{gtr}, \quad \forall i,j,t,r  \\
+z_{ijtr} &\ge& \sum_{g=1}^G m_{ig} \cdot x_{gtr} + \sum_{g=1}^G m_{jg} \cdot x_{gtr} - 1, \quad \forall i,j,t,r 
+\end{eqnarray}
+
+## Number of repetitions per topic
+
+This set of constraints serve to regulate the total number of repetitions for 
+each topic. $r_{min}$ and $r_{max}$ are input variables that the instructor needs 
+to set.
+
+\begin{eqnarray}
+a_{tr} &\ge&  x_{gtr},\quad \forall t,r \\
+a_{tr} &\le& \sum_{g=1}^G x_{gtr},\quad \forall t,r \\
+\sum_{r=1}^{R_t} a_{tr} &\ge& r_{min},\quad \forall t \\
+\sum_{r=1}^{R_t} a_{tr} &\le& r_{max},\quad \forall t
+\end{eqnarray}
+
+## Number of students per group
+
+A similar set of constraints are used to bound the number of students in each
+eventually assigned group.
+
+\begin{eqnarray}
+\sum_{i=1}^N \sum_{g=1}^G m_{ig} \cdot x_{gtr} &\ge& a_{tr} \cdot n^{min}_{tr}, \quad \forall t,r \\
+\sum_{i=1}^N \sum_{g=1}^G m_{ig} \cdot x_{gtr} &\le& a_{tr} \cdot n^{max}_{tr}, \quad \forall t,r 
+\end{eqnarray}
+
+## Per-group skill levels
+
+We aim to maintain the skill level within each group using the following
+constraints.
+
+\begin{eqnarray}
+\sum_{i=1}^N \sum_{g=1}^G m_{ig} \cdot x_{gtr} \cdot s_i &\ge& s_{min}, \quad \forall t,r \\
+\sum_{i=1}^N \sum_{g=1}^G m_{ig} \cdot x_{gtr} \cdot s_i &\le& s_{max}, \quad \forall t,r \\
+\end{eqnarray}
+
+## Binary and non-negativity constraints
+
+\begin{eqnarray}
+x_{gtr} &\in& \{0,1\} \\
+a_{tr} &\in& \{0,1\} \\
+s_{min} &\ge& 0 \\
+s_{max} &\ge& 0
+\end{eqnarray}
+
+To be fair, $s_{min}$ and $s_{max}$ are input variables, but are included here.
