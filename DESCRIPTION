@@ -26,4 +26,5 @@ Imports:
     ompr.roi,
     ROI.plugin.glpk,
     ROI.plugin.gurobi,
+    utils,
     yaml

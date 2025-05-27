@@ -84,12 +84,12 @@ extract_params_yaml <- function(fname) {
 
   # MINIMUM NUMBER OF STUDENTS PER TOPIC
   nmin <- matrix(data=in_params$nmin,
-                 nrow=in_params$n_studs,
+                 nrow=in_params$T,
                  ncol=in_params$R, byrow=TRUE)
 
   # MAXIMUM NUMBER OF STUDENTS PER TOPIC
   nmax <- matrix(data=in_params$nmax,
-                 nrow=in_params$n_studs,
+                 nrow=in_params$T,
                  ncol=in_params$R, byrow=TRUE)
 
   list(T = in_params$T,
