@@ -135,3 +135,9 @@ solution %>%
   group_by(`topic-subtopic`, rep) %>%
   summarise(size=sum(size)) %>%
   ungroup()
+
+## saving generated data
+group_comp_df <- data.frame(id = 1:length(student_group), grouping=student_group)
+group_preference_mat <- p
+saveRDS(group_comp_df, file="data002-composition.rds")
+saveRDS(group_preference_mat, file="data002-preference.rds")
