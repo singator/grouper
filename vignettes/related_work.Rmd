@@ -23,7 +23,53 @@ knitr::opts_chunk$set(
 library(groupr)
 ```
 
+## Introduction
+
+In this vignette, we provide a brief, non-exhaustive overview of related work to 
+assign students to projects, in an educational setting. 
+
+## Balancing staff workload and student preferences
+
+One of the earlier papers found was by @anwar2003student. The goal of the educator
+in that paper was to assign students to two types of project: individual ones 
+and group ones. For the individual projects, students were asked to rank their top
+four projects from a list of project briefs. Each student was then assigned to a 
+project and a corresponding staff member.
+
+The assignment was carried out using two models. In the first model, the
+objective was to minimise the total number of projects that each staff managed.
+In the second model, the feasible solutions from the first model were used to
+decide upon an assignment that maximised the number of students obtaining their
+first choice projects. 
+
+Compared to the models in `groupr`, the primary difference is in the objective
+function. In our case, we only work with the student preference; there is no
+need to balance staff workload since the projects are run within a single
+course.
+
+For the group project, students were asked to rank their top 3 projects
+*individually*. They were then allocated groups that maximised their preferences.
+Compared to the model in our package, this approach does not allow for
+self-formed groups, or for larger projects that involve sub-groups.
+
+## OptAssign
+
+In many ways, the model described in @meyer2009optassign is similar to ours. The
+objective function there maximises student preference for project topics. The
+model in the paper also discusses an extension whereby some groups of students
+can be favoured for particular topics. This is carried out through the inclusion
+of weights in the objective function. Another additional feature adds
+contstraints to ensure that students with certain skills are included in
+particular topics. For instance, a project topic on "Marketing surveys" may
+require at least two students with a statistics background in the group.
+
+Overall, this model formulation is very similar to the one in our package.
+Again, one difference is in the affordance for self-formed groups, and for
+sub-groups in the project team.
+
+## Students to elective courses
+
 Let us try a reference here @meyer2009optassign. Another reference @anwar2003student,
 
-# References
+## References
 
