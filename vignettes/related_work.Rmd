@@ -69,6 +69,45 @@ sub-groups in the project team.
 
 ## Students to elective courses
 
+This paper @berovs2015integer deals with assignment of students to elective
+courses in Croatia. In short, the institution offers a fixed number of such
+courses. Every student must be enrolled in a pre-determined number of courses.
+Each student selects and ranks a certain number of electives. The integer
+programming solution that is derived here maximises the total student
+satisfaction, based on these rankings.
+
+## Assigning students to groups based on traits
+
+The master's thesis from @mcguirk2020assigning describes a very complex integer
+linear programming model. The assignment was used to assign students to
+discussion groups at the University of New Hampshire chemistry department. The
+complete objective function can be written as:
+
+\begin{eqnarray}
+\text{Minmise:}\; \text{preferences} + \text{sizes} + \text{single-trait} + \text{shared-trait}
+\end{eqnarray}
+
+The first component, preferences, incorporates the ranking that put students put 
+down for a group. The second component was used to control the overall group size. Note 
+that in our formulation, this appears as a constraint. The third component arises 
+as a result of the educators experience in teaching this course. They realised that 
+if a student is the only one with a certain trait, e.g. gender, year-of-study, etc.,
+that student would be disinclined to participate in discussions. This is a very 
+interesting point! The final portion of the objective function applies a penalty if
+all students in the group share the same trait.
+
+In our formulation, we have avoided using multi-objective functions for the most
+part. The reason for this decision is that it is very difficult to decide how each
+component should be weighted. It typically requires a further step of post-assignment
+sensitivity analysis.
+
+Another similarity with our findings is the recommendation to use Gurobi over 
+open source solvers.
+
+## Student-to-project supervisor assignment
+
+The next article we discuss is @ramotsisi2022optimization.
+
 Let us try a reference here @meyer2009optassign. Another reference @anwar2003student,
 
 ## References
