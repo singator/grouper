@@ -23,7 +23,7 @@ knitr::opts_chunk$set(
 library(groupr)
 ```
 
-## Introduction
+# Introduction
 
 In this vignette, we provide a brief, non-exhaustive overview of related work to 
 assign students to projects, in an educational setting. 
@@ -106,9 +106,24 @@ open source solvers.
 
 ## Student-to-project supervisor assignment
 
-The next article we discuss is @ramotsisi2022optimization.
+The next article we discuss is @ramotsisi2022optimization. The formulation of this 
+model was the result of a thorough investigation into the process by which 
+students are assigned projects that are supervised by faculty members at the 
+University of Botswana. However, similar to @anwar2003student, the objective 
+function in this study aims to maximise the total workload of supervisors. It 
+does not approach the problem solely from the angle of student preferences.
 
-Let us try a reference here @meyer2009optassign. Another reference @anwar2003student,
+## Automated group assignments in academic setting
 
-## References
+In the final work that we discuss, @bonfert2020improving use a probabilistic 
+weighted optimisation routine to perform the group assignment, based on survey 
+input data. Questions in the survey pertain to scheduling, desired attributes 
+of team members, and indications of whether a student may be isolated. For each
+question, a homogeneity score is computed using the answers from all members of a 
+group. This score is summed over all questions to result in a "fitness" score 
+for each group. A probabilistic hill-climbing algorithm is then used to maximise 
+the average fitness score. Out of the papers discussed on this page, this is 
+the only one that does not use an integer linear programming model.
+
+# References
 
