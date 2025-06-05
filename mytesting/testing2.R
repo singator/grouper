@@ -1,10 +1,10 @@
-# check this out: https://github.com/odow/group-allocator
 library(dplyr)
 library(ompr)
 library(ompr.roi)
 library(ROI.plugin.glpk)
 library(ROI.plugin.gurobi)
 library(yaml)
+library(rlang)
 
 # comp_df: dataframe with nrow = num of students
 # group_col: integer, column that contains the grouping of students
@@ -87,20 +87,29 @@ prepare_model2 <- function(df_list, yaml_list) {
   model
 }
 
-assign_groups2 <- function(model_result, df, group_names) {
+assign_groups2 <- function(model_result, comp_df, params_list, group_names) {
+  # for now, use "grouping", but in the package, we need to follow:
+  # https://dplyr.tidyverse.org/articles/in-packages.html
+  group_sizes <- comp_df %>%
+    group_by(.data[[group_names]]) %>%
+    summarise(size = length(id)) %>%
+    ungroup
+  n_topics <- params_list[["n_topics"]]
+
   get_solution(result, x[g,t,r]) %>%
-  filter(value>0) %>%
-  select(t, r, g) %>%
-  rename("group"="g",
-         "topic"="t",
-         "rep"="r") %>%
-    left_join(df, by=c("group"=group_names)) %>%
-  mutate(`topic-subtopic`=paste(topic-(ceiling(topic/T)-1)*T, ceiling(topic/T), sep="-")) %>%
-  select(`topic-subtopic`, rep, group, size) %>%
-  arrange(`topic-subtopic`, rep, group) %>%
-  group_by(`topic-subtopic`) %>%
-  mutate(rep=match(rep, unique(rep))) %>%
-  ungroup()
+    filter(value>0) %>%
+    select(t, r, g) %>%
+    rename("group"="g",
+           "topic"="t",
+           "rep"="r") %>%
+      left_join(group_sizes, by=c("group"=group_names)) %>%
+    mutate(`topic-subtopic`=paste(topic-(ceiling(topic/n_topics)-1)*n_topics,
+                                  ceiling(topic/n_topics), sep="-")) %>%
+    select(`topic-subtopic`, rep, group, size) %>%
+    arrange(`topic-subtopic`, rep, group) %>%
+    group_by(`topic-subtopic`) %>%
+    mutate(rep=match(rep, unique(rep))) %>%
+    ungroup()
 }
 
 
@@ -112,6 +121,28 @@ df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
 yaml_list <- extract_params_yaml2("mdl2_input01.yml")
 mdl2_1 <- prepare_model2(df_list, yaml_list)
 result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
+
+assigned_groups <- assign_groups2(result, group_comp_df1, yaml_list, "grouping")
+
+T <- 5
+get_solution(result, x[g,t,r])  %>%
+  filter(value>0) %>%
+  select(t, r, g) %>%
+  rename("group"="g",
+         "topic"="t",
+         "rep"="r") %>%
+  left_join(group_sizes, by=c("group"="grouping")) %>%
+  mutate(`topic-subtopic`=paste(topic-(ceiling(topic/T)-1)*T, ceiling(topic/T), sep="-")) %>% #View
+  select(`topic-subtopic`, rep, group, size) %>%
+  arrange(`topic-subtopic`, rep, group) %>%
+  group_by(`topic-subtopic`) %>%
+  mutate(rep=match(rep, unique(rep))) %>% #View
+  ungroup()
+
+group_sizes <- group_comp_df1 %>%
+  group_by(grouping) %>%
+  summarise(size = length(id)) %>%
+  ungroup
 
 ################### UNTIL HERE OK ##############################################
 

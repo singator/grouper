@@ -1,13 +1,10 @@
 # check this out: https://github.com/odow/group-allocator
 library(dplyr)
-
 library(cluster)
-
 library(ompr)
 library(ompr.roi)
 library(ROI.plugin.glpk)
 library(ROI.plugin.gurobi)
-
 library(yaml)
 
 extract_student_info <- function(df,
