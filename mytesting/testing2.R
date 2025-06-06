@@ -95,6 +95,11 @@ assign_groups2 <- function(model_result, comp_df, params_list, group_names) {
     summarise(size = length(id)) %>%
     ungroup
   n_topics <- params_list[["n_topics"]]
+  B <- params_list[["B"]]
+
+  topic_df <- data.frame(topic = 1:(n_topics*B),
+                         topic2 = rep(1:n_topics, B),
+                         subtopic=rep(1:B, each= n_topics))
 
   get_solution(result, x[g,t,r]) %>%
     filter(value>0) %>%
@@ -102,14 +107,20 @@ assign_groups2 <- function(model_result, comp_df, params_list, group_names) {
     rename("group"="g",
            "topic"="t",
            "rep"="r") %>%
-      left_join(group_sizes, by=c("group"=group_names)) %>%
-    mutate(`topic-subtopic`=paste(topic-(ceiling(topic/n_topics)-1)*n_topics,
-                                  ceiling(topic/n_topics), sep="-")) %>%
-    select(`topic-subtopic`, rep, group, size) %>%
-    arrange(`topic-subtopic`, rep, group) %>%
-    group_by(`topic-subtopic`) %>%
+    left_join(group_sizes, by=c("group"=group_names)) %>%
+    left_join(topic_df, by="topic") %>%
+    select(topic2, subtopic, rep, group, size)  %>%
+    group_by(topic2,subtopic) %>%
     mutate(rep=match(rep, unique(rep))) %>%
     ungroup()
+
+    # mutate(topic = topic-(ceiling(topic/n_topics)-1)*n_topics,
+    #      subtopic = ceiling(topic/n_topics)) #%>%
+    # select(topic, subtopic, rep, group, size) %>%
+    # group_by(topic,subtopic) %>%
+    # mutate(rep=match(rep, unique(rep))) %>%
+    # ungroup() %>%
+    # arrange(topic, rep, subtopic, rep, group)
 }
 
 
@@ -123,8 +134,19 @@ mdl2_1 <- prepare_model2(df_list, yaml_list)
 result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
 
 assigned_groups <- assign_groups2(result, group_comp_df1, yaml_list, "grouping")
-separate(assigned_groups, `topic-subtopic`, into=c("topic", "subgroup")) %>% 
-  arrange(topic, rep, subgroup) %>% View
+
+## Loading example data frames
+group_comp_df1 <- data003
+group_pref_mat1 <- mx1
+saveRDS(data003, "data003-composition.rds")
+saveRDS(mx1, "data003-preference.rds")
+
+df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
+yaml_list <- extract_params_yaml2("mdl02_input02.yml")
+mdl2_1 <- prepare_model2(df_list, yaml_list)
+result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
+
+assign_groups2(result, group_comp_df1, yaml_list, "grouping")
 
 ################### UNTIL HERE OK ##############################################
 

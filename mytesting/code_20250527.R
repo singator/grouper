@@ -113,6 +113,7 @@ result$objective_value
 
 #' OPTIMAL SOLUTION
 solution <- get_solution(result, x[g,t,r]) %>%
+#get_solution(result, x[g,t,r]) %>%
   filter(value>0) %>%
   select(t, r, g) %>%
   rename("group"="g",
