@@ -123,26 +123,8 @@ mdl2_1 <- prepare_model2(df_list, yaml_list)
 result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
 
 assigned_groups <- assign_groups2(result, group_comp_df1, yaml_list, "grouping")
-
-T <- 5
-get_solution(result, x[g,t,r])  %>%
-  filter(value>0) %>%
-  select(t, r, g) %>%
-  rename("group"="g",
-         "topic"="t",
-         "rep"="r") %>%
-  left_join(group_sizes, by=c("group"="grouping")) %>%
-  mutate(`topic-subtopic`=paste(topic-(ceiling(topic/T)-1)*T, ceiling(topic/T), sep="-")) %>% #View
-  select(`topic-subtopic`, rep, group, size) %>%
-  arrange(`topic-subtopic`, rep, group) %>%
-  group_by(`topic-subtopic`) %>%
-  mutate(rep=match(rep, unique(rep))) %>% #View
-  ungroup()
-
-group_sizes <- group_comp_df1 %>%
-  group_by(grouping) %>%
-  summarise(size = length(id)) %>%
-  ungroup
+separate(assigned_groups, `topic-subtopic`, into=c("topic", "subgroup")) %>% 
+  arrange(topic, rep, subgroup) %>% View
 
 ################### UNTIL HERE OK ##############################################
 
