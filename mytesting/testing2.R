@@ -136,10 +136,9 @@ result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
 assigned_groups <- assign_groups2(result, group_comp_df1, yaml_list, "grouping")
 
 ## Loading example data frames
-group_comp_df1 <- data003
-group_pref_mat1 <- mx1
-saveRDS(data003, "data003-composition.rds")
-saveRDS(mx1, "data003-preference.rds")
+## 2 topics, 2 sub-groups in each project team
+group_comp_df1 <- readRDS("data003-composition.rds")
+group_pref_mat1 <- readRDS("data003-preference.rds")
 
 df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
 yaml_list <- extract_params_yaml2("mdl02_input02.yml")
@@ -148,66 +147,19 @@ result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
 
 assign_groups2(result, group_comp_df1, yaml_list, "grouping")
 
+## Loading example data frames
+## 2 topics, 3 sub-groups in each project team
+group_comp_df1 <- readRDS("data004-composition.rds")
+group_pref_mat1 <- readRDS("data004-preference.rds")
+#saveRDS(data004, "data004-composition.rds")
+#saveRDS(mx2, "data004-preference.rds")
+
+df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
+yaml_list <- extract_params_yaml2("mdl02_input04.yml")
+mdl2_4 <- prepare_model2(df_list, yaml_list)
+result <- solve_model(mdl2_4, with_ROI(solver="gurobi", verbose=TRUE))
+
+assign_groups2(result, group_comp_df1, yaml_list, "grouping")
+
 ################### UNTIL HERE OK ##############################################
 
-##############################################################################
-# first attempt, 1 - 3 repeats per topic
-##############################################################################
-
-# Prepare data, fit and solve the model
-df1 <- readRDS("mytesting/df001.rds")
-df_list <- extract_student_info(df1, demographic_cols = 1:3, skills = 5, self_formed_groups = 4)
-yaml_list <- extract_params_yaml("mytesting/input001.yml")
-m1 <- prepare_model(df_list, yaml_list)
-
-result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
-assigned_groups <- assign_groups(result, df1, "self_groups")
-
-# compute the average skill in each group:
-assigned_groups %>% group_by(topic,rep) %>%
-  summarise(mean_skill = mean(skill), .groups="drop")
-
-# compute the sum of pairwise diversity in each group:
-assigned_groups %>% group_by(topic, rep) %>%
-  summarise(mean_div = compute_group_diversity(id, df_list$d))
-
-##############################################################################
-# second attempt, exactly 2 repeats per topic, 3 per group
-# more weight on minimising skill range
-##############################################################################
-
-df1 <- readRDS("mytesting/df001.rds")
-df1$self_groups <- 1:NROW(df1)
-df_list <- extract_student_info(df1, demographic_cols = 1:3, skills = 5, self_formed_groups = 4)
-yaml_list <- extract_params_yaml("mytesting/input002.yml")
-m2 <- prepare_model(df_list, yaml_list, w1=1.0, w2=0)
-
-result <- solve_model(m2, with_ROI(solver="gurobi", verbose=TRUE))
-assigned_groups2 <- assign_groups(result, df1, "self_groups")
-
-# compute the average skill in each group:
-assigned_groups2 %>% group_by(topic,rep) %>%
-  summarise(mean_skill = mean(skill), .groups="drop")
-
-# compute the sum of pairwise diversity in each group:
-assigned_groups2 %>% group_by(topic, rep) %>%
-  summarise(mean_div = compute_group_diversity(id, df_list$d), .groups="drop")
-
-### Creating a dummy dataset
-
-majors1 <- c("A", "A", "B", "B")
-skills1 <- c(1,1,3,3)
-g <- 1:4
-data002 <- data.frame(id = 1:4, major= majors1, skill=skills1, groups = g)
-library(groupr)
-data002_list <- extract_student_info(data002, demographic_cols = 2, skills = 3,
-                                     self_formed_groups = 4)
-yaml002_list <- extract_params_yaml("mytesting/input003-data002.yml")
-m3 <- prepare_model(data002_list, yaml_list = yaml002_list, 1.0, 0.0)
-#result <- solve_model(m3, with_ROI(solver="glpk", verbose=TRUE))
-result3 <- solve_model(m3, with_ROI(solver="gurobi", verbose=TRUE))
-assign_groups(result3, data002, "groups")
-
-m4 <- prepare_model(data002_list, yaml_list = yaml002_list, 0.0, 1.0)
-result4 <- solve_model(m3, with_ROI(solver="gurobi", verbose=TRUE))
-assign_groups(result4, data002, "groups")
