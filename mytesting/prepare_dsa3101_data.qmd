@@ -1,0 +1,78 @@
+---
+title: "Preparing DSA3101 data"
+format: html
+---
+
+```{r}
+#| message: false
+#| warning: false
+library(tidyverse)
+library(readxl)
+```
+
+## Semester 2120
+
+### Group composition 
+
+```{r}
+# Read in student id data:
+sid_2120 <- read_excel("dsa3101-raw-data/2120/for_package.xlsx", 
+                       sheet="group_composition") %>% 
+  mutate(id = 1:NROW(.)) %>% 
+  select(id, group_id)
+saveRDS(sid_2120, file="data005-composition.rds")
+
+n_studs <- NROW(sid_2120)
+n_groups <- max(sid_2120$group_id)
+```
+
+### Group preference
+
+-   fill up empty rows/columns
+-   save as data005-preference.rds
+
+```{r}
+# Read in raw preferences
+pref_mat_df <- read_excel("dsa3101-raw-data/2120/for_package.xlsx", 
+                          sheet="preference_matrix",range = "B1:K39")
+
+pref_mat <- matrix(0, nrow=n_groups, ncol=NCOL(pref_mat_df))
+for(i in 1:n_groups) {
+  tmp_ranks <- as.vector(as.matrix(pref_mat_df[i,]))
+  missing_ids <- which(is.na(tmp_ranks))
+  missing_ranks <- setdiff(1:NCOL(pref_mat_df), tmp_ranks[-missing_ids])
+  tmp_ranks[missing_ids] <- sample(missing_ranks)
+  
+  pref_mat[i,] <- tmp_ranks
+}
+saveRDS(pref_mat, file="data005-preference.rds")
+```
+
+### Actual allocation 
+
+```{r}
+topic_tbl <- read_excel("dsa3101-raw-data/2120/for_package.xlsx",
+                        sheet="preference_matrix",
+                        range="P6:R15", col_names = c("topic", "title", "sub_group"))
+topic_tbl$sub_group[topic_tbl$sub_group == "b"] <- "m"
+
+sid_2120 <- read_excel("dsa3101-raw-data/2120/for_package.xlsx", 
+                       sheet="group_composition") %>% 
+  mutate(id = 1:NROW(.))
+actual_alloc <- read_excel("dsa3101-raw-data/2120/for_package.xlsx", 
+                           sheet=1)
+allocated_topic_tbl <- left_join(actual_alloc, sid_2120, by=c("User ID"="email_id")) %>%  
+  select(`Project-group`, `Sub-group`, group_id) %>% 
+  unique() %>% 
+  separate(`Project-group`, into=c("rep", "topic")) %>% 
+  left_join(topic_tbl, by=c("topic" = "title", `Sub-group`="sub_group"))
+
+preference_alloc_topic <- rep(0, n_groups)
+for(jj in 1:n_groups){
+  group_id <- allocated_topic_tbl$group_id[jj]
+  allocated_topic <- allocated_topic_tbl$topic.y[jj]
+  preference_alloc_topic[jj] <- pref_mat[group_id, allocated_topic]
+}
+allocated_topic_tbl$pref_for_allocated_topic <- preference_alloc_topic
+```
+
