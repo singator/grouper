@@ -28,8 +28,11 @@ n_groups <- max(sid_2120$group_id)
 
 ### Group preference
 
--   fill up empty rows/columns
+-   for_package.xlsx has been updated to store front-end preference in first 
+    five columns, and back-end preference in the next 5.
+-   fill up empty rows/columns 
 -   save as data005-preference.rds
+-   latest version on sharepoint
 
 ```{r}
 # Read in raw preferences
@@ -53,18 +56,17 @@ saveRDS(pref_mat, file="data005-preference.rds")
 ```{r}
 topic_tbl <- read_excel("dsa3101-raw-data/2120/for_package.xlsx",
                         sheet="preference_matrix",
-                        range="P6:R15", col_names = c("topic", "title", "sub_group"))
-topic_tbl$sub_group[topic_tbl$sub_group == "b"] <- "m"
+                        range="N7:P16", col_names = c("topic", "title", "sub_group"))
 
 sid_2120 <- read_excel("dsa3101-raw-data/2120/for_package.xlsx", 
                        sheet="group_composition") %>% 
   mutate(id = 1:NROW(.))
 actual_alloc <- read_excel("dsa3101-raw-data/2120/for_package.xlsx", 
-                           sheet=1)
+                           sheet="Results")
 allocated_topic_tbl <- left_join(actual_alloc, sid_2120, by=c("User ID"="email_id")) %>%  
   select(`Project-group`, `Sub-group`, group_id) %>% 
   unique() %>% 
-  separate(`Project-group`, into=c("rep", "topic")) %>% 
+  separate_wider_delim(`Project-group`, delim="-", names=c("rep", "topic")) %>% 
   left_join(topic_tbl, by=c("topic" = "title", `Sub-group`="sub_group"))
 
 preference_alloc_topic <- rep(0, n_groups)
@@ -74,8 +76,8 @@ for(jj in 1:n_groups){
   preference_alloc_topic[jj] <- pref_mat[group_id, allocated_topic]
 }
 allocated_topic_tbl$pref_for_allocated_topic <- preference_alloc_topic
+saveRDS(allocated_topic_tbl, file="data005-allocated.rds")
 ```
-
 
 ## Semester 2210
 
@@ -120,14 +122,13 @@ saveRDS(pref_mat, file="data006-preference.rds")
 ```{r}
 topic_tbl <- read_excel("dsa3101-raw-data/2210/for_package.xlsx",
                         sheet="preference_mat",
-                        range="U8:W21", col_names = c("topic", "title", "sub_group"))
-#topic_tbl$sub_group[topic_tbl$sub_group == "b"] <- "m"
+                        range="Q8:S21", col_names = c("topic", "title", "sub_group"))
 
 sid_2210 <- read_excel("dsa3101-raw-data/2210/for_package.xlsx", 
                        sheet="group_composition") %>% 
   mutate(id = 1:NROW(.))
 actual_alloc <- read_excel("dsa3101-raw-data/2210/for_package.xlsx", 
-                           sheet=1)
+                           sheet="final_allocation")
 allocated_topic_tbl <- left_join(actual_alloc, sid_2210, by=c("Student SIS ID"="email_id")) %>%  
   select(Project, `Sub-group`, group_id) %>% 
   unique() %>% 
@@ -141,6 +142,7 @@ for(jj in 1:n_groups){
   preference_alloc_topic[jj] <- pref_mat[group_id, allocated_topic]
 }
 allocated_topic_tbl$pref_for_allocated_topic <- preference_alloc_topic
+saveRDS(allocated_topic_tbl, file="data006-allocated.rds")
 ```
 
 ## Semester 2220
@@ -157,4 +159,123 @@ saveRDS(sid_2220, file="data007-composition.rds")
 
 n_studs <- NROW(sid_2220)
 n_groups <- max(sid_2220$group_id)
+```
+
+### Group preference
+
+-   fill up empty rows/columns
+-   save as data007-preference.rds
+
+```{r}
+# Read in raw preferences
+pref_mat_df <- read_excel("dsa3101-raw-data/2220/for_package.xlsx", 
+                          sheet="proj_preference_mat",range = "B1:O38")
+
+pref_mat <- matrix(0, nrow=n_groups, ncol=NCOL(pref_mat_df))
+for(i in 1:n_groups) {
+  tmp_ranks <- as.vector(as.matrix(pref_mat_df[i,]))
+  missing_ids <- which(is.na(tmp_ranks))
+  missing_ranks <- setdiff(1:NCOL(pref_mat_df), tmp_ranks[-missing_ids])
+  tmp_ranks[missing_ids] <- sample(missing_ranks)
+  
+  pref_mat[i,] <- tmp_ranks
+}
+saveRDS(pref_mat, file="data007-preference.rds")
+```
+
+### Actual allocation 
+
+```{r}
+topic_tbl <- read_excel("dsa3101-raw-data/2220/for_package.xlsx",
+                        sheet="proj_preference_mat",
+                        range="Q12:S25", col_names = c("topic", "title", "sub_group"))
+
+sid_2220 <- read_excel("dsa3101-raw-data/2220/for_package.xlsx", 
+                       sheet="group_composition") %>% 
+  mutate(id = 1:NROW(.))
+actual_alloc <- read_excel("dsa3101-raw-data/2220/for_package.xlsx", 
+                           sheet="in")
+allocated_topic_tbl <- left_join(actual_alloc, sid_2220, by=c("Student.SIS.ID"="email_id")) %>%  
+  select(Project, `Sub-group`, group_id) %>% 
+  unique() %>% 
+  separate_wider_delim(Project, delim="-", names=c("rep", "topic"), too_many="merge") %>% #View()
+  left_join(topic_tbl, by=c("topic" = "title", `Sub-group`="sub_group")) #%>% View
+
+preference_alloc_topic <- rep(0, n_groups)
+for(jj in 1:n_groups){
+  group_id <- allocated_topic_tbl$group_id[jj]
+  allocated_topic <- allocated_topic_tbl$topic.y[jj]
+  preference_alloc_topic[jj] <- pref_mat[group_id, allocated_topic]
+}
+allocated_topic_tbl$pref_for_allocated_topic <- preference_alloc_topic
+saveRDS(allocated_topic_tbl, file="data007-allocated.rds")
+```
+
+## Semester 2310
+
+### Group composition 
+
+```{r}
+# Read in student id data:
+sid_2310 <- read_excel("dsa3101-raw-data/2310/for_package.xlsx", 
+                       sheet="group_composition") %>% 
+  mutate(id = 1:NROW(.)) %>% 
+  select(id, group_id)
+saveRDS(sid_2310, file="data008-composition.rds")
+
+n_studs <- NROW(sid_2310)
+n_groups <- max(sid_2310$group_id)
+```
+
+### Group preference
+
+-   fill up empty rows/columns
+-   save as data007-preference.rds
+-   3 students were in survey form but not in allocation
+-   3 students were in allocation but not in survey.
+
+```{r}
+# Read in raw preferences
+pref_mat_df <- read_excel("dsa3101-raw-data/2310/for_package.xlsx", 
+                          sheet="proj_pref_mat",range = "B1:K57")
+
+pref_mat <- matrix(0, nrow=n_groups, ncol=NCOL(pref_mat_df))
+for(i in 1:n_groups) {
+  tmp_ranks <- as.vector(as.matrix(pref_mat_df[i,]))
+  missing_ids <- which(is.na(tmp_ranks))
+  missing_ranks <- setdiff(1:NCOL(pref_mat_df), tmp_ranks[-missing_ids])
+  tmp_ranks[missing_ids] <- sample(missing_ranks)
+  
+  pref_mat[i,] <- tmp_ranks
+}
+saveRDS(pref_mat, file="data008-preference.rds")
+```
+
+### Actual allocation 
+
+```{r}
+topic_tbl <- read_excel("dsa3101-raw-data/2310/for_package.xlsx",
+                        sheet="proj_pref_mat",
+                        range="M15:O24", col_names = c("topic", "title", "sub_group"))
+
+sid_2310 <- read_excel("dsa3101-raw-data/2310/for_package.xlsx", 
+                       sheet="group_composition") %>% 
+  mutate(id = 1:NROW(.))
+actual_alloc <- read_excel("dsa3101-raw-data/2310/for_package.xlsx", 
+                           sheet="groups_with_github_ids") %>%  
+  mutate(`Student.SIS.ID` = str_sub(email, 1, 8), .after = 1)
+allocated_topic_tbl <- left_join(actual_alloc, sid_2310, by=c("Student.SIS.ID"="email_id")) %>%  
+  select(group, role, group_id) %>% 
+  unique() %>% 
+  separate_wider_delim(group, delim="-", names=c("rep", "topic"), too_many="merge") %>% 
+  left_join(topic_tbl, by=c("topic" = "title", "role"="sub_group")) #%>% View
+
+preference_alloc_topic <- rep(0, n_groups)
+for(jj in 1:n_groups){
+  group_id <- allocated_topic_tbl$group_id[jj]
+  allocated_topic <- allocated_topic_tbl$topic.y[jj]
+  preference_alloc_topic[jj] <- pref_mat[group_id, allocated_topic]
+}
+allocated_topic_tbl$pref_for_allocated_topic <- preference_alloc_topic
+saveRDS(allocated_topic_tbl, file="data008-allocated.rds")
 ```
