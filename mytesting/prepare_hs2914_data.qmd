@@ -1,0 +1,22 @@
+---
+title: "HS2914 data"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(readxl)
+```
+
+## For TW1
+
+```{r}
+set.seed(1)
+tw1 <- read_excel("hs2914-raw-data/ProjectGroupings.xlsx", sheet="TW1")
+missing_ids <- which(is.na(tw1$coded_major))
+tw1$coded_major[missing_ids] <- sample(c("dsds", "non-dsds"), 
+                                       size = length(missing_ids), replace=TRUE,  
+                                       prob = table(tw1$coded_major))
+```
+
+

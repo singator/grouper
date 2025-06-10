@@ -161,5 +161,40 @@ result <- solve_model(mdl2_4, with_ROI(solver="gurobi", verbose=TRUE))
 
 assign_groups2(result, group_comp_df1, yaml_list, "grouping")
 
+## Try out on DSA3101-2120 (why is model infeasible?)
+group_comp_df1 <- readRDS("data005-composition.rds")
+group_pref_mat1 <- readRDS("data005-preference.rds")[,-c(1,6)]
+df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
+yaml_list <- extract_params_yaml2("mdl02_input05.yml")
+mdl2_5 <- prepare_model2(df_list, yaml_list)
+result <- solve_model(mdl2_5, with_ROI(solver="gurobi", verbose=TRUE))
+
+## DSA3101-2210
+group_comp_df1 <- readRDS("data006-composition.rds")
+group_pref_mat1 <- readRDS("data006-preference.rds")
+df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
+yaml_list <- extract_params_yaml2("mdl02_input06.yml")
+mdl2_6 <- prepare_model2(df_list, yaml_list)
+result <- solve_model(mdl2_6, with_ROI(solver="gurobi", verbose=TRUE))
+da3101_2210_outcome <- assign_groups2(result, group_comp_df1, yaml_list, "group_id")
+
+## DSA3101-2220
+group_comp_df1 <- readRDS("data007-composition.rds")
+group_pref_mat1 <- readRDS("data007-preference.rds")
+df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
+yaml_list <- extract_params_yaml2("mdl02_input07.yml")
+mdl2_7 <- prepare_model2(df_list, yaml_list)
+result <- solve_model(mdl2_7, with_ROI(solver="gurobi", verbose=TRUE))
+da3101_2220_outcome <- assign_groups2(result, group_comp_df1, yaml_list, "group_id")
+
+## DSA3101-2310
+group_comp_df1 <- readRDS("data008-composition.rds")
+group_pref_mat1 <- readRDS("data008-preference.rds")
+df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
+yaml_list <- extract_params_yaml2("mdl02_input08.yml")
+mdl2_8 <- prepare_model2(df_list, yaml_list)
+result <- solve_model(mdl2_8, with_ROI(solver="gurobi", verbose=TRUE))
+da3101_2310_outcome <- assign_groups2(result, group_comp_df1, yaml_list, "group_id")
+
 ################### UNTIL HERE OK ##############################################
 
