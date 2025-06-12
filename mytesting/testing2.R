@@ -9,8 +9,7 @@ library(rlang)
 # comp_df: dataframe with nrow = num of students
 # group_col: integer, column that contains the grouping of students
 # pref_mat: G x B*T binary matrix
-extract_student_info2 <- function(comp_df, group_col,
-                                 pref_mat) {
+extract_student_info2 <- function(comp_df, group_col, pref_mat) {
   N <- NROW(comp_df)
   G <- max(comp_df[[group_col]])
   self_formed_groups_vec <- comp_df[[group_col]]

@@ -1,30 +1,30 @@
 Package: groupr
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Optimal Assignment of Students to Groups
 Version: 0.1.0
 Authors@R: c(
-    person(
-      "Jane", "Doe",
-      email = "jane@example.com",
-      role = c("aut", "cre")
-    )
+    person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = c("aut", "cre")),
+    person("Kevin", "Lam", , "lamfy@nus.edu.sg", role = "aut"),
+    person("Ju", "Xue", , "e0758850@u.nus.edu", role = "ctb")
   )
-Description: More about what it does (maybe more than one line).
-    Continuation lines should be indented.
+Description: Integer programming models to assign students to groups by maximising 
+    diversity within groups, or by maximising preference scores for topics. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
 Suggests: 
     knitr,
-    rmarkdown
+    ompr.roi,
+    rmarkdown,
+    ROI.plugin.glpk,
+    ROI.plugin.gurobi
 VignetteBuilder: knitr
 Imports: 
     cluster,
+    dplyr,
     magrittr,
     ompr,
-    ompr.roi,
-    ROI.plugin.glpk,
-    ROI.plugin.gurobi,
-    utils,
+    rlang,
     yaml
+Roxygen: list(markdown = TRUE)

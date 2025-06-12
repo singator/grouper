@@ -4,14 +4,26 @@
 \alias{prepare_model}
 \title{Initialise model 1}
 \usage{
-prepare_model(df_list, yaml_list, w1 = 0.5, w2 = 0.5)
+prepare_model(
+  df_list,
+  yaml_list,
+  assignment = c("diversity", "preference"),
+  w1 = 0.5,
+  w2 = 0.5
+)
 }
 \arguments{
 \item{df_list}{The output list from extract_student_info().}
 
 \item{yaml_list}{The output list from extract_params_yaml().}
 
-\item{w1, w2}{Numeric values between 0 and 1. Should sum to 1.}
+\item{assignment}{Character string indicating the type of model that this
+dataset is for. The argument is either 'preference' or 'diversity'. Partial
+matching is fine.}
+
+\item{w1, w2}{Numeric values between 0 and 1. Should sum to 1. These weights
+correspond to the importance given to the diversity- and skill-based
+portions in the objective function.}
 }
 \value{
 An ompr model.

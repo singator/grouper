@@ -6,6 +6,14 @@ format: html
 ```{r}
 library(tidyverse)
 library(readxl)
+
+library(dplyr)
+library(cluster)
+library(ompr)
+library(ompr.roi)
+library(ROI.plugin.glpk)
+library(ROI.plugin.gurobi)
+library(yaml)
 ```
 
 ## For TW1
@@ -17,6 +25,104 @@ missing_ids <- which(is.na(tw1$coded_major))
 tw1$coded_major[missing_ids] <- sample(c("dsds", "non-dsds"), 
                                        size = length(missing_ids), replace=TRUE,  
                                        prob = table(tw1$coded_major))
+saveRDS(tw1, "mytesting/data009-composition.rds")
 ```
 
 
+```{r}
+df1 <- readRDS("mytesting/data009-composition.rds")
+df_list <- extract_student_info(df1, demographic_cols = 2, skills = NULL, self_formed_groups = 1)
+yaml_list <- extract_params_yaml("mytesting/mdl01_input009.yml")
+m1 <- prepare_model(df_list, yaml_list, w1=1.0)
+result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
+assigned_groups <- assign_groups(result, df1, "student_id")
+```
+
+Works till here. Need to change remaining T to n_topics in yaml files.
+
+## For TW2
+
+```{r}
+set.seed(1)
+tw2 <- read_excel("mytesting/hs2914-raw-data/ProjectGroupings.xlsx", sheet="TW2")
+missing_ids <- which(is.na(tw2$coded_major))
+tw2$coded_major[missing_ids] <- sample(c("dsds", "non-dsds"), 
+                                       size = length(missing_ids), replace=TRUE,  
+                                       prob = table(tw2$coded_major))
+saveRDS(tw2, "mytesting/data010-composition.rds")
+```
+
+
+```{r}
+df1 <- readRDS("mytesting/data010-composition.rds")
+df_list <- extract_student_info(df1, demographic_cols = 2, skills = NULL, self_formed_groups = 1)
+yaml_list <- extract_params_yaml("mytesting/mdl01_input010.yml")
+m1 <- prepare_model(df_list, yaml_list, w1=1.0)
+result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
+
+result2 <- solve_model(m1, with_ROI(solver="glpk", verbose=TRUE))
+assigned_groups <- assign_groups(result, df1, "student_id")
+```
+
+## For TW3
+
+```{r}
+set.seed(1)
+tw3 <- read_excel("mytesting/hs2914-raw-data/ProjectGroupings.xlsx", sheet="TW3")
+missing_ids <- which(is.na(tw3$coded_major))
+tw3$coded_major[missing_ids] <- sample(c("dsds", "non-dsds"), 
+                                       size = length(missing_ids), replace=TRUE,  
+                                       prob = table(tw3$coded_major))
+saveRDS(tw3, "mytesting/data011-composition.rds")
+```
+
+```{r}
+df1 <- readRDS("mytesting/data011-composition.rds")
+df_list <- extract_student_info(df1, demographic_cols = 2, skills = NULL, self_formed_groups = 1)
+yaml_list <- extract_params_yaml("mytesting/mdl01_input011.yml")
+m1 <- prepare_model(df_list, yaml_list, w1=1.0)
+result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
+assigned_groups <- assign_groups(result, df1, "student_id")
+```
+
+## For TW4
+
+```{r}
+set.seed(1)
+tw4 <- read_excel("mytesting/hs2914-raw-data/ProjectGroupings.xlsx", sheet="TW4")
+missing_ids <- which(is.na(tw4$coded_major))
+tw4$coded_major[missing_ids] <- sample(c("dsds", "non-dsds"), 
+                                       size = length(missing_ids), replace=TRUE,  
+                                       prob = table(tw4$coded_major))
+saveRDS(tw4, "mytesting/data012-composition.rds")
+```
+
+```{r}
+df1 <- readRDS("mytesting/data012-composition.rds")
+df_list <- extract_student_info(df1, demographic_cols = 2, skills = NULL, self_formed_groups = 1)
+yaml_list <- extract_params_yaml("mytesting/mdl01_input012.yml")
+m1 <- prepare_model(df_list, yaml_list, w1=1.0)
+result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
+assigned_groups <- assign_groups(result, df1, "student_id")
+```
+
+## For TW5
+
+```{r}
+set.seed(1)
+tw5 <- read_excel("mytesting/hs2914-raw-data/ProjectGroupings.xlsx", sheet="TW5")
+missing_ids <- which(is.na(tw5$coded_major))
+tw5$coded_major[missing_ids] <- sample(c("dsds", "non-dsds"), 
+                                       size = length(missing_ids), replace=TRUE,  
+                                       prob = table(tw5$coded_major))
+saveRDS(tw5, "mytesting/data013-composition.rds")
+```
+
+```{r}
+df1 <- readRDS("mytesting/data013-composition.rds")
+df_list <- extract_student_info(df1, demographic_cols = 2, skills = NULL, self_formed_groups = 1)
+yaml_list <- extract_params_yaml("mytesting/mdl01_input013.yml")
+m1 <- prepare_model(df_list, yaml_list, w1=1.0)
+result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
+assigned_groups <- assign_groups(result, df1, "student_id")
+```

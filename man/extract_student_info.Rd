@@ -4,32 +4,45 @@
 \alias{extract_student_info}
 \title{Extract student information}
 \usage{
-extract_student_info(dframe, demographic_cols, skills, self_formed_groups)
+extract_student_info(
+  dframe,
+  assignment = c("diversity", "preference"),
+  self_formed_groups,
+  demographic_cols,
+  skills
+)
 }
 \arguments{
 \item{dframe}{A dataframe with one row for each student. The columns could
-possibly contain demographic variables, an overall skill measure, and
-a column indicating self-formed groups. There must be a column named
-id, for use by other functions in this package.}
+possibly contain demographic variables, an overall skill measure, and a
+column indicating self-formed groups.}
 
-\item{demographic_cols}{A set of integers indicating the columns corresponding
-to demographic information, e.g. major, year of study, gender, etc.}
-
-\item{skills}{A numeric measure of overall skill level (higher means more
-skilled).}
+\item{assignment}{Character string indicating the type of model that this
+dataset is for. The argument is either 'preference' or 'diversity'. Partial
+matching is fine.}
 
 \item{self_formed_groups}{An integer column that identifies the self-formed
 groups, submitted by students.}
+
+\item{demographic_cols}{A set of integers indicating the columns
+corresponding to demographic information, e.g. major, year of study,
+gender, etc. This argument is only used by the diversity-based assignment.}
+
+\item{skills}{A numeric measure of overall skill level (higher means more
+skilled). This argument is only used by the diversity-based assignment.
+This argument can be set to NULL. If this is done, then the model used only
+maximises the diversity.}
 }
 \value{
-A list containing:
-
-  N - number of students
-  G - number of self-formed groups
-  m - a student x groups matrix, indicating which student is in which
-      group
-  d - dissimilarity matrix
-  s - skills vector for each individual student
+For the diversity-based assignment model, this function returns as
+list containing:
+\itemize{
+\item N: number of students
+\item G: number of self-formed groups
+\item m: a (student x groups) matrix, indicating group membership for each student.
+\item d: dissimilarity matrix, NxN
+\item s: skills vector for each individual student (possibly NULL)
+}
 }
 \description{
 Converts a dataframe with information on students to a list of parameters. This
@@ -37,5 +50,7 @@ list forms one half of the inputs to prepare_model(). The other half comes from
 extract_params_yaml.
 }
 \details{
-The demographic variables are converted into an NxN dissimilarity matrix.
+For the diversity-based assignment, the demographic variables are converted
+into an NxN dissimilarity matrix. By default, the dissimilarity metric used
+is the Gower distance \code{\link[cluster:daisy]{cluster::daisy()}}.
 }

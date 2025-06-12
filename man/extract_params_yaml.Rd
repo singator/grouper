@@ -4,21 +4,28 @@
 \alias{extract_params_yaml}
 \title{Extract parameters from a YAML file}
 \usage{
-extract_params_yaml(fname)
+extract_params_yaml(fname, assignment = c("diversity", "preference"))
 }
 \arguments{
 \item{fname}{A YAML file containing the remaining parameters.}
+
+\item{assignment}{Character string indicating the type of model that this
+dataset is for. The argument is either 'preference' or 'diversity'. Partial
+matching is fine.}
 }
 \value{
-A list containing:
-  T    - the number of topics
-  R    - the optimally desired number of repetitions per topic
-  nmim - the minimum number of students per topic
-  nmax - the maximum number of students per topic
-  rmin - the minimum number of repetitions per topic
-  rmax - the maximum number of repetitions per topic.
+For the diversity+skill-based assignment, this function returns a
+list containing:
+\itemize{
+\item n_topics: the number of topics
+\item R: the optimally desired number of repetitions per topic
+\item nmin: the minimum number of students per topic,
+\item nmax: the maximum number of students per topic,
+\item rmin: the minimum number of repetitions per topic,
+\item rmax: the maximum number of repetitions per topic.
+}
 }
 \description{
-The remaining parameters for model 1 are retrieved from a YAML file, so as not
-to clutter the argument list for extract_student_info.
+The remaining parameters for the models are retrieved from a YAML file, so as
+not to clutter the argument list for \code{\link[=extract_student_info]{extract_student_info()}}.
 }
