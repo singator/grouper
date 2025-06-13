@@ -1,0 +1,77 @@
+---
+title: "Application to simple datasets"
+output: 
+  rmarkdown::html_vignette:
+    toc: true
+    toc_depth: 2
+vignette: >
+  %\VignetteIndexEntry{Application to simple datasets}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(groupr)
+library(ompr)
+library(ompr.roi)
+library(ROI.plugin.gurobi)
+#library(ROI.plugin.glpk)
+```
+
+# Introduction 
+
+This vignette illustrates the use of the package on simple datasets.
+
+# Diversity-Based Assignment
+
+## Dataset 001
+
+The first dataset comprises just 4 students. Here is what it looks like. The
+name of this dataset indicates that it is for the diversity-based-assignment
+(dba) model and that it consists of the group composition (gc) information.
+
+```{r}
+dba_gc_ex001
+```
+
+It is intuitive that an assignment into two groups of size two, based on the
+diversity of majors alone, should assign students 1 and 2 into the first 
+group and the remaining two students into another group.
+
+The corresponding YAML `dba_gc_ex001.yml` file for this exercise consists of the
+following lines:
+
+```{r echo=FALSE, comment=''}
+cat(readLines(system.file("extdata", "dba_gc_ex001.yml",  package = "groupr")), 
+    sep = '\n')
+```
+
+To run the assignment using only the primary major (ignoring the skill), we 
+can use the following commands. We can use either the gurobi solver, or the 
+glpk solver for this example. Both are equally fast.
+
+```{r}
+# indicate appropriate columns using integer ids.
+df_ex001_list <- extract_student_info(dba_gc_ex001, "diversity",
+                                  demographic_cols = 2, skills = 3, 
+                                  self_formed_groups = 4)
+yaml_ex001_list <- extract_params_yaml(system.file("extdata", 
+                                             "dba_gc_ex001.yml",  
+                                             package = "groupr"),
+                                       "diversity")
+m1 <- prepare_model(df_ex001_list, yaml_ex001_list, assignment="diversity",
+                    w1=1.0, w2=0.0)
+result3 <- solve_model(m1, with_ROI(solver="gurobi"))
+#result3 <- solve_model(m1, with_ROI(solver="glpk"))
+assign_groups(result3, assignment = "diversity", dba_gc_ex001, "groups")
+```
+
+We can see that students 1 and 2 have been assigned to topic 1, repetition 1. Students 
+3 and 4 have been assigned to topic 2, repetition 1.

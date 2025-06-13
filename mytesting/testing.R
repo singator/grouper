@@ -180,10 +180,11 @@ library(groupr)
 data002_list <- extract_student_info(data002, demographic_cols = 2, skills = 3,
                                      self_formed_groups = 4)
 yaml002_list <- extract_params_yaml("mytesting/input003-data002.yml")
-m3 <- prepare_model(data002_list, yaml_list = yaml002_list, 1.0, 0.0)
+m3 <- prepare_model(data002_list, yaml_list = yaml002_list, assignment="diversity",
+                    1.0, 0.0)
 #result <- solve_model(m3, with_ROI(solver="glpk", verbose=TRUE))
 result3 <- solve_model(m3, with_ROI(solver="gurobi", verbose=TRUE))
-assign_groups(result3, data002, "groups")
+assign_groups(result3, assignment = "diversity", data002, "groups")
 
 m4 <- prepare_model(data002_list, yaml_list = yaml002_list, 0.0, 1.0)
 result4 <- solve_model(m3, with_ROI(solver="gurobi", verbose=TRUE))
