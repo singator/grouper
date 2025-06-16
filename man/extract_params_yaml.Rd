@@ -24,6 +24,16 @@ list containing:
 \item rmin: the minimum number of repetitions per topic,
 \item rmax: the maximum number of repetitions per topic.
 }
+
+For the preference-based assignment, this function returns a list containing:
+\itemize{
+\item n_topics: the number of topics
+\item R: the optimally desired number of repetitions per topic
+\item nmin: the minimum number of students per topic,
+\item nmax: the maximum number of students per topic,
+\item rmin: the minimum number of repetitions per topic,
+\item rmax: the maximum number of repetitions per topic.
+}
 }
 \description{
 The remaining parameters for the models are retrieved from a YAML file, so as

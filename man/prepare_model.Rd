@@ -2,7 +2,7 @@
 % Please edit documentation in R/model_prep.R
 \name{prepare_model}
 \alias{prepare_model}
-\title{Initialise model 1}
+\title{Initialise optimisation model}
 \usage{
 prepare_model(
   df_list,
@@ -29,5 +29,5 @@ portions in the objective function.}
 An ompr model.
 }
 \description{
-Initialise model 1
+Initialise optimisation model
 }

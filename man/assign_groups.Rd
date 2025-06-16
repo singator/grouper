@@ -8,6 +8,7 @@ assign_groups(
   model_result,
   assignment = c("diversity", "preference"),
   dframe,
+  params_list,
   group_names
 )
 }
@@ -19,6 +20,10 @@ dataset is for. The argument is either 'preference' or 'diversity'. Partial
 matching is fine.}
 
 \item{dframe}{The original dataframe used in \code{\link[=extract_student_info]{extract_student_info()}}.}
+
+\item{params_list}{The list of parameters from the YAML file, i.e. the output
+of \code{\link[=extract_params_yaml]{extract_params_yaml()}}. This is only required for the preference-based
+assignment.}
 
 \item{group_names}{A character string. It denotes the column name in the
 original dataframe containing the self-formed groups. Note that we need the

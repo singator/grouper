@@ -70,7 +70,8 @@ m1 <- prepare_model(df_ex001_list, yaml_ex001_list, assignment="diversity",
                     w1=1.0, w2=0.0)
 result3 <- solve_model(m1, with_ROI(solver="gurobi"))
 #result3 <- solve_model(m1, with_ROI(solver="glpk"))
-assign_groups(result3, assignment = "diversity", dba_gc_ex001, "groups")
+assign_groups(result3, assignment = "diversity", dframe=dba_gc_ex001, 
+              group_names="groups")
 ```
 
 We can see that students 1 and 2 have been assigned to topic 1, repetition 1. Students 

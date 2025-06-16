@@ -124,8 +124,8 @@ assign_groups2 <- function(model_result, comp_df, params_list, group_names) {
 
 
 ## Loading example data frames
-group_comp_df1 <- readRDS("data002-composition.rds")
-group_pref_mat1 <- readRDS("data002-preference.rds")
+group_comp_df1 <- readRDS("mytesting/data002-composition.rds")
+group_pref_mat1 <- readRDS("mytesting/data002-preference.rds")
 
 df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
 yaml_list <- extract_params_yaml2("mdl2_input01.yml")
@@ -136,15 +136,17 @@ assigned_groups <- assign_groups2(result, group_comp_df1, yaml_list, "grouping")
 
 ## Loading example data frames
 ## 2 topics, 2 sub-groups in each project team
-group_comp_df1 <- readRDS("data003-composition.rds")
-group_pref_mat1 <- readRDS("data003-preference.rds")
+group_comp_df1 <- readRDS("mytesting/data003-composition.rds")
+group_pref_mat1 <- readRDS("mytesting/data003-preference.rds")
 
-df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
-yaml_list <- extract_params_yaml2("mdl02_input02.yml")
-mdl2_1 <- prepare_model2(df_list, yaml_list)
+df_list <- extract_student_info(group_comp_df1, "preference",
+                                self_formed_groups = 2,
+                                pref_mat = group_pref_mat1)
+yaml_list <- extract_params_yaml("mytesting/mdl02_input02.yml", "preference")
+mdl2_1 <- prepare_model(df_list, yaml_list, "preference")
 result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
 
-assign_groups2(result, group_comp_df1, yaml_list, "grouping")
+assign_groups(result, "preference", group_comp_df1, yaml_list, "grouping")
 
 ## Loading example data frames
 ## 2 topics, 3 sub-groups in each project team

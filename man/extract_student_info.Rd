@@ -9,13 +9,15 @@ extract_student_info(
   assignment = c("diversity", "preference"),
   self_formed_groups,
   demographic_cols,
-  skills
+  skills,
+  pref_mat
 )
 }
 \arguments{
 \item{dframe}{A dataframe with one row for each student. The columns could
 possibly contain demographic variables, an overall skill measure, and a
-column indicating self-formed groups.}
+column indicating self-formed groups. It is best to have an id column to
+identify each student.}
 
 \item{assignment}{Character string indicating the type of model that this
 dataset is for. The argument is either 'preference' or 'diversity'. Partial
@@ -32,9 +34,14 @@ gender, etc. This argument is only used by the diversity-based assignment.}
 skilled). This argument is only used by the diversity-based assignment.
 This argument can be set to NULL. If this is done, then the model used only
 maximises the diversity.}
+
+\item{pref_mat}{The preference matrix with dimensions equal to the
+num of groups x B*T, where T is the number of topics and B is the number
+of sub-groups per topic. This argument is only used in the preference-based
+assignment. See the Details section for more information.}
 }
 \value{
-For the diversity-based assignment model, this function returns as
+For the diversity-based assignment model, this function returns a
 list containing:
 \itemize{
 \item N: number of students
@@ -42,6 +49,16 @@ list containing:
 \item m: a (student x groups) matrix, indicating group membership for each student.
 \item d: dissimilarity matrix, NxN
 \item s: skills vector for each individual student (possibly NULL)
+}
+
+For the preference-based assignment model, this function returns a list
+containing:
+\itemize{
+\item N: number of students
+\item G: number of self-formed groups
+\item m: a (student x groups) matrix, indicating group membership for each student.
+\item n: a vector of length G, with the number of students in each self-formed group.
+\item p: The preference matrix from the input argument.
 }
 }
 \description{
@@ -53,4 +70,16 @@ extract_params_yaml.
 For the diversity-based assignment, the demographic variables are converted
 into an NxN dissimilarity matrix. By default, the dissimilarity metric used
 is the Gower distance \code{\link[cluster:daisy]{cluster::daisy()}}.
+
+For the preference-based assignment, the preference matrix indicates the
+preference that each group has for the project topics. For this model,
+each topic has possibly B sub-groups. The number of columns of this matrix
+must be B*T. Suppose there are T=3 topics and B=2 sub-groups per topic. Then
+the order of the sub-topics should be:
+
+T1S1, T2S1, T3S1, T1S2, T2S2, and T3S2.
+
+Note that higher values in the preference matrix reflect a greater preference for a
+particular topic-subtopic combination, since the objective function is set to be
+maximised.
 }
