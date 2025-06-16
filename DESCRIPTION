@@ -5,7 +5,7 @@ Version: 0.1.0
 Authors@R: c(
     person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = c("aut", "cre")),
     person("Kevin", "Lam", , "lamfy@nus.edu.sg", role = "aut"),
-    person("Ju", "Xue", , "e0758850@u.nus.edu", role = "ctb")
+    person("Ju", "Xue", , "rigi.jx@gmail.com", role = "ctb")
   )
 Description: Integer programming models to assign students to groups by maximising 
     diversity within groups, or by maximising preference scores for topics. 
