@@ -27,11 +27,12 @@ library(ROI.plugin.gurobi)
 
 # Introduction 
 
-This vignette illustrates the use of the package on simple datasets.
+This vignette illustrates the use of the package on simple datasets, for which
+the optimal solutions are apparent from inspection.
 
 # Diversity-Based Assignment
 
-## Dataset 001
+## Dataset 001 (diversity only)
 
 The first dataset comprises just 4 students. Here is what it looks like. The
 name of this dataset indicates that it is for the diversity-based-assignment
@@ -49,7 +50,7 @@ The corresponding YAML `dba_gc_ex001.yml` file for this exercise consists of the
 following lines:
 
 ```{r echo=FALSE, comment=''}
-cat(readLines(system.file("extdata", "dba_gc_ex001.yml",  package = "groupr")), 
+cat(readLines(system.file("extdata", "dba_params_ex001.yml",  package = "groupr")), 
     sep = '\n')
 ```
 
@@ -63,7 +64,7 @@ df_ex001_list <- extract_student_info(dba_gc_ex001, "diversity",
                                   demographic_cols = 2, skills = 3, 
                                   self_formed_groups = 4)
 yaml_ex001_list <- extract_params_yaml(system.file("extdata", 
-                                             "dba_gc_ex001.yml",  
+                                             "dba_params_ex001.yml",  
                                              package = "groupr"),
                                        "diversity")
 m1 <- prepare_model(df_ex001_list, yaml_ex001_list, assignment="diversity",
@@ -76,3 +77,75 @@ assign_groups(result3, assignment = "diversity", dframe=dba_gc_ex001,
 
 We can see that students 1 and 2 have been assigned to topic 1, repetition 1. Students 
 3 and 4 have been assigned to topic 2, repetition 1.
+
+## Dataset 001 (skills only)
+
+```{r}
+# indicate appropriate columns using integer ids.
+df_ex001_list <- extract_student_info(dba_gc_ex001, "diversity",
+                                  demographic_cols = 2, skills = 3, 
+                                  self_formed_groups = 4)
+yaml_ex001_list <- extract_params_yaml(system.file("extdata", 
+                                             "dba_params_ex001.yml",  
+                                             package = "groupr"),
+                                       "diversity")
+m1a <- prepare_model(df_ex001_list, yaml_ex001_list, assignment="diversity",
+                    w1=0.0, w2=1.0)
+result3 <- solve_model(m1a, with_ROI(solver="gurobi"))
+
+assign_groups(result3, assignment = "diversity", dframe=dba_gc_ex001, 
+              group_names="groups")
+
+get_solution(result3, smin)
+get_solution(result3, smax)
+```
+
+We can see that students 1 and 2 have been assigned to topic 1, repetition 1. Students 
+3 and 4 have been assigned to topic 2, repetition 1.
+
+# Preference-Based Assignment
+
+## Dataset 002
+
+The second datasets comprises 8 students. Here is a listing of the dataset:
+
+```{r}
+pba_gc_ex002
+```
+
+Each student is in a self-formed group of size 2, indicated via the `grouping`
+column. Suppose that, for this set of students, the instructor wishes to assign
+students into two topics, with each topic having two sub-groups. This requires
+the preference matrix to have 4 columns - one for each topic-subgroup
+combination. Remember that the ordering of topics/subtopics should be:
+
+T1S1, T2S1, T1S2, T2S2
+
+There should be 4 rows in the preference matrix - one for each self-formed
+group.
+
+```{r}
+pba_prefmat_ex002
+```
+
+It is possible to assign each self-formed group to its optimal choice of
+topic-subtopic combination. In our solution, we should see that group 1 is
+assigned to subtopic 1 of topic 1, group 2 is assigned to sub-topic 1 of topic
+2, and so on.
+
+```{r}
+df_ex002_list <- extract_student_info(pba_gc_ex002, "preference", 
+                                      self_formed_groups = 2, 
+                                      pref_mat = pba_prefmat_ex002)
+yaml_ex002_list <- extract_params_yaml(system.file("extdata", 
+                                             "pba_params_ex002.yml",  
+                                             package = "groupr"),
+                                       "preference")
+m2 <- prepare_model(df_ex002_list, yaml_ex002_list, "preference")
+
+result2 <- solve_model(m2, with_ROI(solver="gurobi"))
+assign_groups(result2, assignment = "preference", 
+              dframe=pba_gc_ex002, yaml_ex002_list, 
+              group_names="grouping")
+```
+

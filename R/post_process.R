@@ -58,8 +58,9 @@ assign_groups <- function(model_result,
                 dplyr::select("topic2", "subtopic", "rep", "group", "size")  %>%
                 dplyr::group_by(.data$topic2, .data$subtopic) %>%
                 dplyr::mutate(rep=match(.data$rep, unique(.data$rep)))
+    out_df <- as.data.frame(dplyr::ungroup(out_df))
 
-    return(dplyr::ungroup(out_df))
+    return(out_df)
   } else {
     stop("assignment argument should be either 'diversity' or 'preference'.")
   }

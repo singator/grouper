@@ -132,7 +132,8 @@ yaml_list <- extract_params_yaml2("mdl2_input01.yml")
 mdl2_1 <- prepare_model2(df_list, yaml_list)
 result <- solve_model(mdl2_1, with_ROI(solver="gurobi", verbose=TRUE))
 
-assigned_groups <- assign_groups2(result, group_comp_df1, yaml_list, "grouping")
+assigned_groups <- assign_groups(result, "preference",
+                                 group_comp_df1, yaml_list, "grouping")
 
 ## Loading example data frames
 ## 2 topics, 2 sub-groups in each project team
