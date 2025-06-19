@@ -1,6 +1,8 @@
 ---
 title: "HS2914 tutorial allocation"
-format: html
+format: 
+  html:
+    embed-resources: true
 ---
 
 ```{r}
