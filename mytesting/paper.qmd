@@ -1,0 +1,71 @@
+---
+title: "Optimal Group Assignment"
+format: html
+---
+
+# Introduction
+
+## Related Work
+
+## Interview
+
+To better understand the real-world demands, requirements, and/or pain points of
+group allocation in academic settings, in-depth interviews with two faculty
+members from from contrasting disciplines were conducted. The insights obtained
+provided a good understanding of the relevant considerations when performing group
+assignments.
+
+The first professor interviewed was from the School of Computing at National
+University of Singapore. In his course, the professor uses a two-stage group
+formation process. In the first stage, students form sub-groups, on their
+own, of up to three members. Allowing students to form groups on their own helps to 
+minimize communication friction since there would be a certain level of familiarity 
+between members. 
+
+These sub-groups are then matched, to create larger project teams of six.
+Matching is carried out with the objective of neutralizing differences in skill
+levels across the final teams. In order to do so, a survey is used to capture
+information about each student’s major and his/her self-rated understanding of
+relevant concepts and tools.
+
+In a separate course in our own department (Department of Statistics and Data
+Science), we also follow this process of sub-groups. In our case, each final
+group is made up of 8 members - four from sub-group 1 and four from sub-group 2.
+Each sub-group has different duties related to a single topic. For instance,
+sub-group 1 usually builds a user-interface for the software, while sub-group 2
+carries out the data analysis/modeling. However, in our case, we prioritise the
+preference of each self-formed group for their roles and topics. Students are
+allowed to form self-formed groups of size up to 4. This ensures familiarity
+within sub-groups, but, by matching sub-groups randomly, students are possibly 
+forced to collaborate with a group they may not know so well. This replicates what
+happens at the workplace.
+
+In the second interview, we approached a faculty member from the Department of
+Communications and New Media to gain a better understanding of the practical
+challenges in group allocation for courses in the Arts and Social Sciences
+field. The professor indicated that, for certain topics/tasks, the main
+objective in group allocation is to achieve diversity. According to her, the
+ideal group should encompass a range of viewpoints and expertise, drawn from
+varied academic specializations and personal backgrounds, e.g. year of study.
+She explained that when group members come from the same background, there is a
+risk that the team will lack the multi-faceted perspectives necessary to
+generate an appropriate solution. A diverse group is more likely to develop a
+broader range of innovative solutions.
+
+In summary, from our interviews and our literature review, we observe there are
+several factors that are important when performing group assignment in higher
+education. These range from student preferences to faculty time to diversity
+within groups. Random assignment is far from ideal. Our package provides a
+starting point to handle some of the cases discussed above in a flexible manner.
+
+# Optimisation Models
+
+## Preference-Based Optimisation
+
+## Diversity-Based Optimisation
+
+# Results
+
+# Discussion
+
+
