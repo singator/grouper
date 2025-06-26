@@ -1,11 +1,62 @@
 ---
 title: "Optimal Group Assignment"
+author: "Vik Gopal, Kevin Fu Yuan Lam, Ju Xue (all from National University of Singapore)"
 format: html
 ---
+
+Important link:
+
+https://openjournals.readthedocs.io/en/jose/submitting.html#example-paper-and-bibliography
 
 # Introduction
 
 ## Related Work
+
+# Statement of Need 
+
+Institutes of Higher Education (IHLs) are increasingly using collaborative
+learning pedagogies. These pedagogies have the potential to benefit learners in
+terms of deeper understanding of course content, as well as teamwork skills
+which are highly valued in professional settings. However, the realisation of
+these benefits depend on how educators assign learners to groups, and often
+requires a balancing act between honouring learners’ preferences and composing
+groups that ensure diversity in backgrounds and balance in skills.
+
+In response to these considerations, researchers have formulated different
+mathematical models for educators to allocate learners to groups. First, some
+formulations prioritise maximising learner preferences: Anwar and Bahaj (2003)
+developed a model that, in one phase, aimed to maximise students obtaining their
+first-choice projects; and Meyer (2009) in OptAssign also focused on maximising
+student preference for project topics. Second, other formulations prioritise
+maximising diversity in backgrounds and balance in skills: McGuirk (2020)
+described a complex integer linear  programming model to assign students to
+discussion groups, considering not only preferences but also group size, and
+penalties for students being the sole member with a specific trait or all
+students sharing the same trait.  Lastly, some other models address related, but
+distinct, problems like assigning students to elective courses (Beroš & Meter,
+2015) or student-to-project supervisor assignments, which may incorporate
+factors like balancing staff workload (Ramotsisi et al., 2022).  Bonfert-Taylor
+and Miller (2020) used a probabilistic approach rather than integer linear
+programming, computing homogeneity scores based on survey data to achieve group
+fitness.
+
+Nonetheless, these formulations are not without limitations. These models do not
+readily support learners forming their own groups, or the concept of larger
+projects involving sub-groups. Others incorporate objectives like staff workload
+balancing, which, while important institutionally, may not be the primary
+concern for an educator focused solely on student-centric pedagogical goals
+within a single course.  Furthermore, complex multi-objective functions can
+introduce difficulties in deciding how different components should be weighted.
+We develop “groupr”, an R package to address these gaps, offering educators
+accessible tools to implement sophisticated group allocation strategies.
+
+“groupr” provides two distinct optimisation models. The Preference-Based
+Assignment (PBA) model allows educators to assign student groups to topics
+primarily to maximise overall student preferences for those topics. The
+Diversity-Based Assignment (DBA) model enables educators to assign students to
+groups and topics with the dual aims of maximising diversity (based on student
+attributes) within groups and balancing specific skill levels across different
+groups.  Both models are formulated as integer linear programs.
 
 ## Interview
 
@@ -58,7 +109,9 @@ education. These range from student preferences to faculty time to diversity
 within groups. Random assignment is far from ideal. Our package provides a
 starting point to handle some of the cases discussed above in a flexible manner.
 
-# Optimisation Models
+# Functionality and Usage
+
+# Application to Courses
 
 ## Preference-Based Optimisation
 
