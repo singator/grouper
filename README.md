@@ -1,5 +1,5 @@
 
-# groupr
+# grouper
 
 <!-- badges: start -->
 <!-- badges: end -->
