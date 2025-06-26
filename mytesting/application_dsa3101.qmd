@@ -44,6 +44,9 @@ allocated_pref_mean_2120 <- mean(allocated_df1$pref_for_allocated_topic)
 # 7.44
 groupr_pref_mean_2120 <- mean(groupr_assigned_df1$pref_for_allocated_topic)
 # 9.52
+
+groupr_assigned_df1 %>% select(1,2,3) %>% 
+  filter(subtopic==1) %>% unique() %>% NROW
 ```
 
 
@@ -145,3 +148,32 @@ allocated_pref_mean_2310 <- mean(allocated_df1$pref_for_allocated_topic)
 groupr_pref_mean_2310 <- mean(groupr_assigned_df1$pref_for_allocated_topic)
 # 9.71
 ```
+
+```{r}
+dsa_tbl <- tibble(
+       iteration = c(1,2,3,4),
+       manual_pref = c(allocated_pref_mean_2120,
+                       allocated_pref_mean_2210,
+                       allocated_pref_mean_2220,
+                       allocated_pref_mean_2310),
+       grouper_pref = c(groupr_pref_mean_2120,
+                       groupr_pref_mean_2210,
+                       groupr_pref_mean_2220,
+                       groupr_pref_mean_2310),
+       class_size = c(62, 108, 89, 151),
+       n_topics = c(4, 7, 7, 5),
+       n_project_teams = c(7, 13 , 11, 18) 
+         )
+
+dsa_tbl %>% pivot_longer(cols=c("manual_pref", "grouper_pref"),
+                         names_to = "assignment_type",
+                         values_to="mean_preference") %>%
+  ggplot(aes(x=iteration)) +
+  geom_line(aes(y=mean_preference, color=assignment_type)) +
+  geom_point(aes(y=mean_preference, color=assignment_type)) +
+  labs(title="Comparison between grouper assignment and manual assignment",
+       subtitle="Preference-based assignment",
+       x="Iteration (Semester number)",
+       y="Mean preference", col="Assignment type")
+```
+
