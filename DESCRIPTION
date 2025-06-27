@@ -1,7 +1,7 @@
 Package: grouper
 Type: Package
 Title: Optimal Assignment of Students to Groups
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
     person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = c("aut", "cre")),
     person("Kevin", "Lam", , "lamfy@nus.edu.sg", role = "aut"),
