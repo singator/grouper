@@ -4,16 +4,16 @@
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of groupr is to make it easier for an instructor to divide students
+The goal of grouper is to make it easier for an instructor to divide students
 into groups.
 
 ## Installation
 
-You can install the development version of groupr from [GitHub](https://github.com/) with:
+You can install the development version of grouper from [GitHub](https://github.com/) with:
 
 ``` r
 # install.packages("pak")
-pak::pak("singator/groupr")
+pak::pak("singator/grouper")
 ```
 
 ## Example
@@ -21,7 +21,7 @@ pak::pak("singator/groupr")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
-library(groupr)
+library(grouper)
 ## basic example code
 ```
 

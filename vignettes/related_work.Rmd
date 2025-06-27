@@ -20,7 +20,7 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(groupr)
+library(grouper)
 ```
 
 # Introduction
@@ -42,7 +42,7 @@ In the second model, the feasible solutions from the first model were used to
 decide upon an assignment that maximised the number of students obtaining their
 first choice projects. 
 
-Compared to the models in `groupr`, the primary difference is in the objective
+Compared to the models in `grouper`, the primary difference is in the objective
 function. In our case, we only work with the student preference; there is no
 need to balance staff workload since the projects are run within a single
 course.

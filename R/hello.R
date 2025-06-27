@@ -1,4 +1,4 @@
-#' Hello from groupr
+#' Hello from grouper
 #'
 #' @returns A string
 #' @export

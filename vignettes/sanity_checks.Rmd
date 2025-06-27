@@ -18,11 +18,11 @@ knitr::opts_chunk$set(
 ```
 
 ```{r setup}
-library(groupr)
+library(grouper)
 library(ompr)
 library(ompr.roi)
-library(ROI.plugin.gurobi)
-#library(ROI.plugin.glpk)
+#library(ROI.plugin.gurobi)
+library(ROI.plugin.glpk)
 ```
 
 # Introduction 
@@ -50,8 +50,8 @@ The corresponding YAML `dba_gc_ex001.yml` file for this exercise consists of the
 following lines:
 
 ```{r echo=FALSE, comment=''}
-cat(readLines(system.file("extdata", "dba_params_ex001.yml",  package = "groupr")), 
-    sep = '\n')
+cat(readLines(system.file("extdata",  "dba_params_ex001.yml",   
+                          package = "grouper")),  sep = '\n')
 ```
 
 To run the assignment using only the primary major (ignoring the skill), we 
@@ -65,12 +65,12 @@ df_ex001_list <- extract_student_info(dba_gc_ex001, "diversity",
                                   self_formed_groups = 4)
 yaml_ex001_list <- extract_params_yaml(system.file("extdata", 
                                              "dba_params_ex001.yml",  
-                                             package = "groupr"),
+                                             package = "grouper"),
                                        "diversity")
 m1 <- prepare_model(df_ex001_list, yaml_ex001_list, assignment="diversity",
                     w1=1.0, w2=0.0)
-result3 <- solve_model(m1, with_ROI(solver="gurobi"))
-#result3 <- solve_model(m1, with_ROI(solver="glpk"))
+#result3 <- solve_model(m1, with_ROI(solver="gurobi"))
+result3 <- solve_model(m1, with_ROI(solver="glpk"))
 assign_groups(result3, assignment = "diversity", dframe=dba_gc_ex001, 
               group_names="groups")
 ```
@@ -87,11 +87,12 @@ df_ex001_list <- extract_student_info(dba_gc_ex001, "diversity",
                                   self_formed_groups = 4)
 yaml_ex001_list <- extract_params_yaml(system.file("extdata", 
                                              "dba_params_ex001.yml",  
-                                             package = "groupr"),
+                                             package = "grouper"),
                                        "diversity")
 m1a <- prepare_model(df_ex001_list, yaml_ex001_list, assignment="diversity",
                     w1=0.0, w2=1.0)
-result3 <- solve_model(m1a, with_ROI(solver="gurobi"))
+#result3 <- solve_model(m1a, with_ROI(solver="gurobi"))
+result3 <- solve_model(m1a, with_ROI(solver="glpk"))
 
 assign_groups(result3, assignment = "diversity", dframe=dba_gc_ex001, 
               group_names="groups")
@@ -139,11 +140,12 @@ df_ex002_list <- extract_student_info(pba_gc_ex002, "preference",
                                       pref_mat = pba_prefmat_ex002)
 yaml_ex002_list <- extract_params_yaml(system.file("extdata", 
                                              "pba_params_ex002.yml",  
-                                             package = "groupr"),
+                                             package = "grouper"),
                                        "preference")
 m2 <- prepare_model(df_ex002_list, yaml_ex002_list, "preference")
 
-result2 <- solve_model(m2, with_ROI(solver="gurobi"))
+#result2 <- solve_model(m2, with_ROI(solver="gurobi"))
+result2 <- solve_model(m2, with_ROI(solver="glpk"))
 assign_groups(result2, assignment = "preference", 
               dframe=pba_gc_ex002, yaml_ex002_list, 
               group_names="grouping")

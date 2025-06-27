@@ -2,7 +2,7 @@
 % Please edit documentation in R/hello.R
 \name{hello}
 \alias{hello}
-\title{Hello from groupr}
+\title{Hello from grouper}
 \usage{
 hello()
 }
@@ -10,7 +10,7 @@ hello()
 A string
 }
 \description{
-Hello from groupr
+Hello from grouper
 }
 \examples{
 hello()
