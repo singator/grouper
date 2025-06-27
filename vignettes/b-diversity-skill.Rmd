@@ -17,10 +17,6 @@ knitr::opts_chunk$set(
 )
 ```
 
-```{r setup}
-library(grouper)
-```
-
 # Model introduction
 
 Consider a situation where an instructor wishes to divide students into groups.
@@ -68,8 +64,12 @@ x_{gtr} = \begin{cases}
 \end{cases}
 \end{equation}
 
-This constraint represents the need for each group to be assigned to exactly one
-topic-repetition combination. 
+$s_{min}$ and $s_{max}$ are also decision variables. The objective function attempts
+to minimise the difference between them, ensuring all groups have a similar range 
+of total skill.
+
+This first constraint represents the need for each group to be assigned to exactly one
+topic-repetition combination:
 
 $$
 \sum_{t=1}^T \sum_{r=1}^{R_t} x_{gtr} = 1, \quad \forall g
@@ -128,5 +128,3 @@ a_{tr} &\in& \{0,1\} \\
 s_{min} &\ge& 0 \\
 s_{max} &\ge& 0
 \end{eqnarray}
-
-To be fair, $s_{min}$ and $s_{max}$ are input variables, but are included here.

@@ -1,11 +1,11 @@
 ---
-title: "Related work"
+title: "Related work and grouper"
 output:
   rmarkdown::html_vignette:
     toc: true
     toc_depth: 2
 vignette: >
-  %\VignetteIndexEntry{Related work}
+  %\VignetteIndexEntry{Related work and grouper}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 bibliography: references.bib
@@ -22,7 +22,8 @@ knitr::opts_chunk$set(
 # Introduction
 
 In this vignette, we provide a brief, non-exhaustive overview of related work to 
-assign students to projects, in an educational setting. 
+assign students to projects, in an educational setting. Finally, we introduce 
+our `grouper` package.
 
 ## Balancing staff workload and student preferences
 
@@ -120,6 +121,44 @@ group. This score is summed over all questions to result in a "fitness" score
 for each group. A probabilistic hill-climbing algorithm is then used to maximise 
 the average fitness score. Out of the papers discussed on this page, this is 
 the only one that does not use an integer linear programming model.
+
+# Introducing `groupr` package
+
+`grouper` provides two distinct optimisation models, both of which are are
+formulated as integer linear programs.
+
+The Preference-Based Assignment (PBA) model allows educators to assign student
+groups to topics primarily to maximise overall student preferences for those
+topics. The topics can be viewed as project titles. The model allows for
+repetitions of each project title. It is also possible to allow each project
+team to be comprised of multiple sub-groups in this formulation.
+
+To execute the optimisation routine, an instructor needs to prepare:
+
+1.  A group composition table listing the member students within each
+    self-formed group.
+2.  A preference matrix containing the preference that each self-formed 
+    group has for each topic.
+3.  A YAML file defining the remaining parameters of the model.
+
+The Diversity-Based Assignment (DBA) model enables educators to assign students
+to groups and topics with the dual aims of maximising diversity (based on
+student attributes) within groups and balancing specific skill levels across
+different groups. These are formulated in a single objective function with
+weights assigned to each component.
+
+To execute the DBA optimisation routine, the instructor needs to prepare:
+
+1.  A group composition table containing:
+    *   the member students within each self-formed group,
+    *   the demographics that will be used to compute pairwise dissimilarity
+        between students, and
+    *   a numeric measure of each student's skill.
+2.  A YAML file defining the remaining parameters of the model.
+
+Refer to the remaining vignettes for more information about the model definition
+and application. In our examples, we utilise the `gplk` solver. However, for 
+more complicated problems, we highly recommend the `gurobi` solver.
 
 # References
 
