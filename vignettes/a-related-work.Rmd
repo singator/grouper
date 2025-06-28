@@ -157,8 +157,22 @@ To execute the DBA optimisation routine, the instructor needs to prepare:
 2.  A YAML file defining the remaining parameters of the model.
 
 Refer to the remaining vignettes for more information about the model definition
-and application. In our examples, we utilise the `gplk` solver. However, for 
-more complicated problems, we highly recommend the `gurobi` solver.
+and application. 
+
+In our package, we use the `ompr` framework for optimisation, which means that
+you are free to use any solver. In our small examples, we demonstrate the
+package using the `gplk` solver. However, for more complicated problems, we
+highly recommend the `gurobi` solver. There is a free academic license for this 
+tool. However, the `ROI.plugin.gurobi` and `gurobi` packages are not on CRAN. The 
+following links will aid in installing the `gurobi` package:
+
+* [Installing the R package gurobi](https://docs.gurobi.com/projects/optimizer/en/current/reference/r/setup.html)
+* [Guide to installing gurobi optimiser](https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html)
+
+The following github repository provides instructions on install the gurobi solver:
+
+* [Installing `ROI.plugin.gurobi`](https://github.com/roigrp/ROI.plugin.gurobi)
+
 
 # References
 

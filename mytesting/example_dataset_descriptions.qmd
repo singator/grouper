@@ -1,0 +1,119 @@
+---
+title: "Example Datasets"
+format: 
+  html: 
+    code-tools: false
+    code-line-numbers: true
+    fig-align: center
+    embed-resources: true
+    toc: true
+    toc-title: Contents
+    toc-depth: 2
+    number-sections: true
+    number-depth: 2
+    theme: Yeti
+---
+
+# Introduction
+
+This document details the various example datasets that are available on this 
+repository. They can be used to test out the `grouper` package functions.
+
+In all the following code, set your working directory to be `mytesting`, and 
+make sure the `grouper` package is loaded. It is not recommended that you knit 
+this file; it will take far too long to run. Instead, try out each dataset 
+separately to get familiar with how the package works:
+
+1. Extract student and group information with `extract_student_info()`. For the 
+   preference-based model, you will also need to provide the preference matrix.
+2. Extract additional model parameters with `extract_params_yaml()`
+3. Prepare the model with `prepare_model()`
+4. Solve the model with `solve_model()`
+5. Assign back the topics/groupings to the original group composition dataframe.
+
+```{r}
+#| message: false
+#| warning: false
+library(grouper)
+library(ompr)
+library(ompr.roi)
+library(ROI.plugin.gurobi)
+library(tidyverse)
+```
+
+
+## Diversity-Based Assignment models
+
+### Custom created datasets
+
+Please refer to the vignette entitled "Application to simple datasets" for 
+an example.
+
+### Datasets from interdisciplinary course
+
+Please refer to the document `application_hs2914.qmd` for more details.
+
+## Preference-Based Assignment models
+
+### Custom created datasets
+
+*   `data002-composition.rds`
+*   `data002-preference.rds`
+*   `mdl02_input01.yml`
+
+These is a sample dataset, randomly generated. There are 100 students. Most of
+the 25 self-formed groups have 5 students, but the final few self-formed groups
+have between 1 - 4 students.
+
+For this example, there are 5 topics, with 2 sub-groups in each project team.
+
+```{r}
+cur_df <- readRDS("data002-composition.rds")
+cur_pref <- readRDS("data002-preference.rds")
+
+df_list <- extract_student_info(cur_df, "preference",   self_formed_groups = 2,  
+                                pref_mat = cur_pref)
+yaml_list <- extract_params_yaml("mdl02_input01.yml", "preference")
+cur_mdl <- prepare_model(df_list, yaml_list, "preference")
+result <- solve_model(cur_mdl, with_ROI(solver="gurobi"))
+cur_assigned <- assign_groups(result, assignment = "preference",   
+                              dframe=cur_df, yaml_list,  
+                              group_names="grouping")
+```
+
+
+*   `data003-composition.rds`
+*   `data003-preference.rds`
+*   `mdl02_input02.yml`
+
+This is a sanity check dataset. It is included with the package. Please refer 
+to the vignette entitled "Application to simple datasets" for more information 
+on it.
+
+*   `data004-composition.rds`
+*   `data004-preference.rds`
+*   `mdl02_input04.yml`
+
+This is another small dataset, created to demonstrate the `grouper` works when 
+the number of sub-groups is 3. There are 12 students, 7 self-formed groups, and 
+2 topics.
+
+```{r}
+cur_df <- readRDS("data004-composition.rds")
+cur_pref <- readRDS("data004-preference.rds")
+
+df_list <- extract_student_info(cur_df, "preference",   self_formed_groups = 2,  
+                                pref_mat = cur_pref)
+yaml_list <- extract_params_yaml("mdl02_input04.yml", "preference")
+cur_mdl <- prepare_model(df_list, yaml_list, "preference")
+result <- solve_model(cur_mdl, with_ROI(solver="gurobi"))
+cur_assigned <- assign_groups(result, assignment = "preference",   
+                              dframe=cur_df, yaml_list,  
+                              group_names="grouping")
+```
+
+### Datasets from Data Science course
+
+There are four datasets from the data science course we taught. Each dataset
+corresponds to one semester. Please refer to `application_dsa3101.qmd` for details 
+on running `grouper` on these datasets.
