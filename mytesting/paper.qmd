@@ -47,10 +47,10 @@ balancing, which, while important institutionally, may not be the primary
 concern for an educator focused solely on student-centric pedagogical goals
 within a single course.  Furthermore, complex multi-objective functions can
 introduce difficulties in deciding how different components should be weighted.
-We develop “groupr”, an R package to address these gaps, offering educators
+We develop “grouper”, an R package to address these gaps, offering educators
 accessible tools to implement sophisticated group allocation strategies.
 
-“groupr” provides two distinct optimisation models. The Preference-Based
+“grouper” provides two distinct optimisation models. The Preference-Based
 Assignment (PBA) model allows educators to assign student groups to topics
 primarily to maximise overall student preferences for those topics. The
 Diversity-Based Assignment (DBA) model enables educators to assign students to

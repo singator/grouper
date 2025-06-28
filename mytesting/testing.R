@@ -176,7 +176,7 @@ majors1 <- c("A", "A", "B", "B")
 skills1 <- c(1,1,3,3)
 g <- 1:4
 data002 <- data.frame(id = 1:4, major= majors1, skill=skills1, groups = g)
-library(groupr)
+library(grouper)
 data002_list <- extract_student_info(data002, demographic_cols = 2, skills = 3,
                                      self_formed_groups = 4)
 yaml002_list <- extract_params_yaml("mytesting/input003-data002.yml")

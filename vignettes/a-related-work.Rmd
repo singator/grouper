@@ -122,7 +122,7 @@ for each group. A probabilistic hill-climbing algorithm is then used to maximise
 the average fitness score. Out of the papers discussed on this page, this is 
 the only one that does not use an integer linear programming model.
 
-# Introducing `groupr` package
+# Introducing `grouper` package
 
 `grouper` provides two distinct optimisation models, both of which are are
 formulated as integer linear programs.
