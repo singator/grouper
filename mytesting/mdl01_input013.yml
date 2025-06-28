@@ -1,5 +1,5 @@
 n_studs: 25
-T:  5
+n_topics:  5
 R:  1
 nmin: 4
 nmax: 5

@@ -12,16 +12,20 @@ library(ompr.roi)
 library(ROI.plugin.gurobi)
 ```
 
+Each of the code chunks below corresponds to data from one of the five tutorial
+groups that needed to split into discussion groups. Each tutorial group needed 
+to contain 5 discussion groups.
 
 ```{r}
-df1 <- readRDS("mytesting/data009-composition.rds")
+df1 <- readRDS("data009-composition.rds")
 df_list <- extract_student_info(df1, "diversity",
                                 demographic_cols = 2, skills = NULL, 
                                 self_formed_groups = 1)
-yaml_list <- extract_params_yaml("mytesting/mdl01_input009.yml",
-                                 "diversity")
+yaml_list <- extract_params_yaml("mdl01_input009.yml", "diversity")
+
+# Purely demographic-diversity based.
 m1 <- prepare_model(df_list, yaml_list, "diversity", w1=1.0)
-result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(m1, with_ROI(solver="gurobi"))
 assigned_groups <- assign_groups(result, "diversity", df1, yaml_list, "student_id")
 ```
 
@@ -75,4 +79,19 @@ left_join(manual_tbl, grouper_tbl, by='assign_value')
 ```
 
 
+Another example, for data012:
 
+```{r}
+df1 <- readRDS("data012-composition.rds")
+df_list <- extract_student_info(df1, "diversity",
+                                demographic_cols = 2, skills = NULL, 
+                                self_formed_groups = 1)
+yaml_list <- extract_params_yaml("mdl01_input012.yml", "diversity")
+
+# Purely demographic-diversity based.
+m1 <- prepare_model(df_list, yaml_list, "diversity", w1=1.0)
+result <- solve_model(m1, with_ROI(solver="gurobi"))
+assigned_groups <- assign_groups(result, "diversity", df1, yaml_list, "student_id")
+```
+
+Similar code will work for data010 and data011 (resp. input011.yml and input012.yml)

@@ -10,6 +10,8 @@ library(ompr.roi)
 library(ROI.plugin.gurobi)
 ```
 
+* Set `mytesting` to be your working directory
+
 ## Semester 2120
 
 This one is a bit tricky because there were originally 5 topics, but the optimisation
@@ -17,18 +19,20 @@ could not find a solution because there were not enough students to form groups 
 5 topics!
 
 ```{r}
-group_comp_df1 <- readRDS("mytesting/data005-composition.rds")
-group_pref_mat1 <- readRDS("mytesting/data005-preference.rds")[, -c(1,6)]
+# Run the model on the dataset, having removed one undersubscribed topic
+group_comp_df1 <- readRDS("data005-composition.rds")
+group_pref_mat1 <- readRDS("data005-preference.rds")[, -c(1,6)]
 df_list <- extract_student_info(group_comp_df1, "preference",  
                                 self_formed_groups = 2,  
                                 pref_mat = group_pref_mat1)
-yaml_list <- extract_params_yaml("mytesting/mdl02_input05.yml", "preference")
+yaml_list <- extract_params_yaml("mdl02_input05.yml", "preference")
 mdl2_5 <- prepare_model(df_list, yaml_list, "preference")
-result <- solve_model(mdl2_5, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(mdl2_5, with_ROI(solver="gurobi"))
 groupr_assigned_df1 <- assign_groups(result, assignment = "preference",  
                                      dframe=group_comp_df1, yaml_list, 
                                      group_names="group_id")
 
+# Extract the preference that each group had for the grouper-assigned topic
 n_groups <- NROW(group_pref_mat1)
 preference_alloc_topic <- rep(0, n_groups)
 for(jj in 1:n_groups){
@@ -38,31 +42,33 @@ for(jj in 1:n_groups){
 }
 groupr_assigned_df1$pref_for_allocated_topic <- preference_alloc_topic
 
-allocated_df1 <- readRDS("mytesting/data005-allocated.rds")
+# Extract the manually allocated topics.
+allocated_df1 <- readRDS("data005-allocated.rds")
 
-allocated_pref_mean_2120 <- mean(allocated_df1$pref_for_allocated_topic)
-# 7.44
-groupr_pref_mean_2120 <- mean(groupr_assigned_df1$pref_for_allocated_topic)
-# 9.52
+# Calculate mean preference over students
+allocated_pref_mean_2120 <- sum(allocated_df1$pref_for_allocated_topic*allocated_df1$size)/sum(allocated_df1$size)
+# 8.16
+groupr_pref_mean_2120 <-  sum(groupr_assigned_df1$pref_for_allocated_topic*groupr_assigned_df1$size)/sum(groupr_assigned_df1$size)
+# 9.47
 
-groupr_assigned_df1 %>% select(1,2,3) %>% 
-  filter(subtopic==1) %>% unique() %>% NROW
+#groupr_assigned_df1 %>% select(1,2,3) %>% 
+#  filter(subtopic==1) %>% unique() %>% NROW
 ```
 
 
 ## Semester 2210
 
 ```{r}
-group_comp_df1 <- readRDS("mytesting/data006-composition.rds")
-group_pref_mat1 <- readRDS("mytesting/data006-preference.rds")
-allocated_df1 <- readRDS("mytesting/data006-allocated.rds")
+group_comp_df1 <- readRDS("data006-composition.rds")
+group_pref_mat1 <- readRDS("data006-preference.rds")
+allocated_df1 <- readRDS("data006-allocated.rds")
 
 df_list <- extract_student_info(group_comp_df1, "preference",  
                                 self_formed_groups = 2,  
                                 pref_mat = group_pref_mat1)
-yaml_list <- extract_params_yaml("mytesting/mdl02_input06.yml", "preference")
+yaml_list <- extract_params_yaml("mdl02_input06.yml", "preference")
 mdl2_6 <- prepare_model(df_list, yaml_list, "preference")
-result <- solve_model(mdl2_6, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(mdl2_6, with_ROI(solver="gurobi"))
 groupr_assigned_df1 <- assign_groups(result, assignment = "preference",  
                                      dframe=group_comp_df1, yaml_list, 
                                      group_names="group_id")
@@ -76,26 +82,26 @@ for(jj in 1:n_groups){
 }
 groupr_assigned_df1$pref_for_allocated_topic <- preference_alloc_topic
 
-
-allocated_pref_mean_2210 <- mean(allocated_df1$pref_for_allocated_topic)
-# 12.13
-groupr_pref_mean_2210 <- mean(groupr_assigned_df1$pref_for_allocated_topic)
-# 13.44
+allocated_pref_mean_2210 <- 
+ sum(allocated_df1$pref_for_allocated_topic*allocated_df1$size)/sum(allocated_df1$size) 
+# 13.06
+groupr_pref_mean_2210 <-  sum(groupr_assigned_df1$pref_for_allocated_topic*groupr_assigned_df1$size)/sum(groupr_assigned_df1$size)
+# 13.32
 ```
 
 ## Semester 2220
 
 ```{r}
-group_comp_df1 <- readRDS("mytesting/data007-composition.rds")
-group_pref_mat1 <- readRDS("mytesting/data007-preference.rds")
-allocated_df1 <- readRDS("mytesting/data007-allocated.rds")
+group_comp_df1 <- readRDS("data007-composition.rds")
+group_pref_mat1 <- readRDS("data007-preference.rds")
+allocated_df1 <- readRDS("data007-allocated.rds")
 
 df_list <- extract_student_info(group_comp_df1, "preference",  
                                 self_formed_groups = 2,  
                                 pref_mat = group_pref_mat1)
-yaml_list <- extract_params_yaml("mytesting/mdl02_input07.yml", "preference")
+yaml_list <- extract_params_yaml("mdl02_input07.yml", "preference")
 mdl2_7 <- prepare_model(df_list, yaml_list, "preference")
-result <- solve_model(mdl2_7, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(mdl2_7, with_ROI(solver="gurobi"))
 groupr_assigned_df1 <- assign_groups(result, assignment = "preference",  
                                      dframe=group_comp_df1, yaml_list, 
                                      group_names="group_id")
@@ -109,26 +115,26 @@ for(jj in 1:n_groups){
 }
 groupr_assigned_df1$pref_for_allocated_topic <- preference_alloc_topic
 
-
-allocated_pref_mean_2220 <- mean(allocated_df1$pref_for_allocated_topic)
-# 11.57
-groupr_pref_mean_2220 <- mean(groupr_assigned_df1$pref_for_allocated_topic)
-# 13.62
+allocated_pref_mean_2220 <- 
+  sum(allocated_df1$pref_for_allocated_topic*allocated_df1$size)/sum(allocated_df1$size)  
+# 12.70
+groupr_pref_mean_2220 <-  sum(groupr_assigned_df1$pref_for_allocated_topic*groupr_assigned_df1$size)/sum(groupr_assigned_df1$size)
+# 13.51
 ```
 
 ## Semester 2310
 
 ```{r}
-group_comp_df1 <- readRDS("mytesting/data008-composition.rds")
-group_pref_mat1 <- readRDS("mytesting/data008-preference.rds")
-allocated_df1 <- readRDS("mytesting/data008-allocated.rds")
+group_comp_df1 <- readRDS("data008-composition.rds")
+group_pref_mat1 <- readRDS("data008-preference.rds")
+allocated_df1 <- readRDS("data008-allocated.rds")
 
 df_list <- extract_student_info(group_comp_df1, "preference",  
                                 self_formed_groups = 2,  
                                 pref_mat = group_pref_mat1)
-yaml_list <- extract_params_yaml("mytesting/mdl02_input08.yml", "preference")
+yaml_list <- extract_params_yaml("mdl02_input08.yml", "preference")
 mdl2_8 <- prepare_model(df_list, yaml_list, "preference")
-result <- solve_model(mdl2_8, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(mdl2_8, with_ROI(solver="gurobi"))
 groupr_assigned_df1 <- assign_groups(result, assignment = "preference",  
                                      dframe=group_comp_df1, yaml_list, 
                                      group_names="group_id")
@@ -142,11 +148,10 @@ for(jj in 1:n_groups){
 }
 groupr_assigned_df1$pref_for_allocated_topic <- preference_alloc_topic
 
-
-allocated_pref_mean_2310 <- mean(allocated_df1$pref_for_allocated_topic)
-# 9.34
-groupr_pref_mean_2310 <- mean(groupr_assigned_df1$pref_for_allocated_topic)
-# 9.71
+allocated_pref_mean_2310 <-  sum(allocated_df1$pref_for_allocated_topic*allocated_df1$size)/sum(allocated_df1$size)   
+# 9.48
+groupr_pref_mean_2310 <-  sum(groupr_assigned_df1$pref_for_allocated_topic*groupr_assigned_df1$size)/sum(groupr_assigned_df1$size) 
+# 9.66
 ```
 
 ```{r}

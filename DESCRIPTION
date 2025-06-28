@@ -18,7 +18,6 @@ Suggests:
     ompr.roi,
     rmarkdown,
     ROI.plugin.glpk,
-    ROI.plugin.gurobi
 VignetteBuilder: knitr
 Imports: 
     cluster,

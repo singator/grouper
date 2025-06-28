@@ -160,10 +160,10 @@ this same group of students would have been 9.53 (higher is better).
 
 | Sem | manual_pref | grouper_pref | class_size | n_topics | n_project_teams |
 |-----|-------------|--------------|------------|----------|-----------------|
-| 1   | 7.45        | 9.53         | 62         | 4        | 7               |
-| 2   | 12.1        | 13.4         | 108        | 7        | 13              |
-| 3   | 11.6        | 13.6         | 89         | 7        | 11              |
-| 4   | 9.34        | 9.71         | 151        | 5        | 18              |
+| 1   |  8.16       |  9.47        | 62         | 4        | 7               |
+| 2   | 13.10       | 13.30        | 108        | 7        | 13              |
+| 3   | 12.70       | 13.50        | 89         | 7        | 11              |
+| 4   |  9.48       |  9.66        | 151        | 5        | 18              |
 
 ![Preference-based groupings](pba_example_ds.png)
 
