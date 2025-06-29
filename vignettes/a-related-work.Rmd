@@ -167,7 +167,7 @@ tool. However, the `ROI.plugin.gurobi` and `gurobi` packages are not on CRAN. Th
 following links will aid in installing the `gurobi` package:
 
 * [Installing the R package gurobi](https://docs.gurobi.com/projects/optimizer/en/current/reference/r/setup.html)
-* [Guide to installing gurobi optimiser](https://cran.r-project.org/web/packages/prioritizr/vignettes/gurobi_installation_guide.html)
+* [Guide to installing gurobi optimiser](https://cran.r-project.org/package=prioritizr/vignettes/gurobi_installation_guide.html)
 
 The following github repository provides instructions on install the gurobi solver:
 
