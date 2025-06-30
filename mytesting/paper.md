@@ -12,6 +12,7 @@ authors:
 - name: Ju Xue
   affiliation: 1
 - name: Kevin Fu Yuan Lam
+  orcid: "0000-0002-1535-7059"
   affiliation: 1
 - name: Vik Gopal
   orcid: "0000-0002-7232-2063"
@@ -21,95 +22,95 @@ bibliography: paper.bib
 
 # Summary
 
-A test of citation [@anwar2003student].
+Collaborative learning pedagogies are increasing in prominence in higher
+education. However, the realisation of these pedagogies’ benefits depend on how
+educators assign learners to groups. Because such assignments can be
+time-consuming and subjective, there is a need for an algorithmic solution for
+them. In this paper, we present `grouper`, an easy-to-use and free R package
+that implements two flexible group allocation strategies in an automated and
+objective manner. `grouper` was designed to ease the burden on educators
+adopting collaborative learning pedagogies in their courses, and has been
+evaluated on two undergraduate courses described here. 
 
 # Statement of Need
 
 Institutes of Higher Learning (IHLs) are increasingly using collaborative
-learning pedagogies. These pedagogies have the potential to benefit learners in
-terms of deeper understanding of course content, as well as teamwork skills
-which are highly valued in professional settings. However, the realisation of
-these benefits depend on how educators assign learners to groups.
+learning pedagogies, which can benefit learners through deeper understanding of
+course content and teamwork skills. However, the realisation of these
+sought-after benefits depend on how educators assign learners to groups.
 
 Educators have formulated various mathematical models to perform this
-assignment. For instance, @anwar2003student and @meyer2009optassign developed
-models that aimed to maximise students' project preferences. Other formulations 
-prioritise maximising diversity in backgrounds and balance in skills:
-@mcguirk2020assigning described a complex integer linear  programming model to 
-assign students to discussion groups, considering not only preferences but also 
-group size, and group composition. Yet other models address related but
-distinct problems such as assigning students to elective courses
-[@berovs2015integer] or incorporating staff workload into student-to-project 
-supervisor assignments [@ramotsisi2022optimization].
+assignment: [@anwar2003student] and [@meyer2009optassign] developed models that
+prioritised maximising students' project preferences; [@mcguirk2020assigning]
+developed a model that prioritised students' preferences, group sizes and group
+composition. Other models address related, but distinct, problems such as
+assigning students to elective courses [@berovs2015integer] or incorporating
+staff workload into student-to-project supervisor assignments
+[@ramotsisi2022optimization].
 
-As part of our research into the problem, in-depth interviews with two faculty
-members from from contrasting disciplines were also conducted. 
+As part of our research, we also conducted in-depth interviews with two
+professors from contrasting disciplines.
 
-The first professor interviewed was from the School of Computing at National
-University of Singapore. In his course, the professor allowed students to form
-form sub-groups, on their own, of up to three members. Sub-groups were then
-paired up to create larger project teams of six. The pairing was carried out with 
-the objective of neutralizing differences in skill levels across the final teams. 
+The first professor, from the School of Computing at National University of
+Singapore, allowed students to self-form sub-groups of up to three members in
+his course. These sub-groups were then paired to create larger project teams of
+six, in order to neutralize differences in skill levels across the final teams.
 
-This is a similar procedure that we utilise in one of the courses in our own
-department (Department of Statistics and Data Science). However, instead of
-utilising skills, we prioritised the preference of each self-formed group for
-their roles and topics. Allowing students to form groups on their own ensures
-familiarity within sub-groups, but, by matching sub-groups randomly, students
-are possibly forced to collaborate with a group they may not know so well. This
-replicates what happens at the workplace.
+We utilised a similar procedure in a course in our department (Department of
+Statistics and Data Science). However, instead of utilising skills, we
+prioritised  each self-formed sub-group's preference for their roles and
+topics. While self-formed sub-groups ensure familiarity between members in the
+sub-group, matching sub-groups randomly possibly forces students to collaborate
+with others whom they may not know well, replicating workplace scenarios.
 
-In the second interview, we approached a faculty member from the Department of
-Communications and New Media to gain a better understanding of the practical
-challenges in group allocation for courses in the Arts and Social Sciences
-field. The professor indicated that, for certain topics/tasks, the main
-objective in group allocation is to achieve diversity. According to her, the
-ideal group should encompass a range of viewpoints and expertise, drawn from
-varied academic specializations and personal backgrounds, e.g. year of study.
-She explained that when group members come from diverse backgrounds, they are
-able to understand the problem from multiple angles; this generally leads to a
-broader range of innovative solutions.
+The second professor, from the Department of Communications and New Media,
+provided additional perspective on practical challenges in group allocation for
+courses in the Arts and Social Sciences. For her, the main objective in group
+allocation is to achieve diversity, especially for certain topics/tasks; the
+ideal group should encompass varied viewpoints and expertise, drawn from
+different academic specializations and personal backgrounds, e.g. year of
+study. She explained that having group members from diverse backgrounds
+facilitates understanding the problem from multiple angles, generally leading
+to more innovative solutions.
 
-In summary, from our interviews and our literature review, we observe there are
-several factors that educators could prioritise when performing group
-assignment in higher education. Whichever factor is used, it is apparent that
-there is a need for an algorithmic solution to the assignment phase. This would
-ease the burden on the instructor, while providing an objective procedure for
-the assignment. Our contribution is an R package `grouper` that offers two
-flexible group allocation strategies.
+In summary, our literature review and interviews highlight several factors that
+educators could prioritise when performing group assignment in higher
+education. Whichever factor is used, it is apparent that there is a need for an
+algorithmic solution for the assignment. This would ease the burden on the
+instructor, while providing an objective procedure for the assignment. Our
+contribution is an R package `grouper` that offers two flexible group
+allocation strategies.
 
 # Functionality and Usage
 
-`grouper` provides two distinct optimisation models, both of which are are
-formulated as integer linear programs.
+`grouper` provides two distinct integer linear programming optimisation models.
 
 The Preference-Based Assignment (PBA) model allows educators to assign student
-groups to topics primarily to maximise overall student preferences for those
-topics. The topics can be viewed as project titles. The model allows for
-repetitions of each project title. It is also possible to allow each project
-team to be comprised of multiple sub-groups in this formulation.
+groups to topics to maximise overall student preferences for those topics. The
+topics can be viewed as project titles. The model allows for repetitions of
+each project title. This formulation also allows each project team to comprise
+multiple sub-groups.
 
-To execute the optimisation routine, an instructor needs to prepare:
+To execute the optimisation routine, an instructor prepares:
 
 1.  A group composition table listing the member students within each
     self-formed group.
-2.  A preference matrix containing the preference that each self-formed 
+2.  A preference matrix containing the preference that each self-formed
     group has for each topic.
 3.  A YAML file defining the remaining parameters of the model.
 
 The Diversity-Based Assignment (DBA) model enables educators to assign students
-to groups and topics with the dual aims of maximising diversity (based on
-student attributes) within groups and balancing specific skill levels across
-different groups. These are formulated in a single objective function with
-weights assigned to each component.
+to groups and topics with the dual, but weighted, aims of maximising diversity
+(based on student attributes) within groups and balancing specific skill levels
+across different groups. 
 
-To execute the DBA optimisation routine, the instructor needs to prepare:
+To execute the DBA optimisation routine, the instructor prepares:
 
 1.  A group composition table containing:
-    *   the member students within each self-formed group,
-    *   the demographics that will be used to compute pairwise dissimilarity
-        between students, and
-    *   a numeric measure of each student's skill.
+    -   the member students within each self-formed group,
+    -   the demographics that will be used to compute pairwise
+        dissimilarity between students, and
+    -   a numeric measure of each student's skill.
 2.  A YAML file defining the remaining parameters of the model.
 
 # Application to Courses
@@ -118,16 +119,15 @@ To execute the DBA optimisation routine, the instructor needs to prepare:
 
 The final author of this paper teaches an interdisciplinary course together
 with a colleague from the English Language department. Students first learn
-about data science and linguistics in lectures. Then, in small groups,
-they discuss chosen topics from the viewpoint of linguistics and data
+about data science and linguistics in lectures. Then, in small groups, they
+discuss chosen topics from the viewpoint of linguistics and data
 science/statistics. As such, it is necessary to create groups with a good
 balance of Data Science and Statistics (dsds) majors, and non-dsds majors.
 
 The table below shows a manual breakdown of 24 students in a tutorial class,
-into 5 discussion groups. On the left two columns, we see the result of a
-manual allocation. On the two right-most columns, we observe the result of
-assignment from the DBA model using `grouper`.
-
+into 5 discussion groups. The left two columns describe the result of manual
+assignment. And the two right-most columns describe the result of assignment
+using the DBA model in `grouper`.
 
 |          | manual_assigned |          | grouper_assigned |          |
 |----------|-----------------|----------|------------------|----------|
@@ -138,25 +138,26 @@ assignment from the DBA model using `grouper`.
 | 4        | 2               | 3        | 2                | 2        |
 | 5        | 2               | 2        | 3                | 2        |
 
-It is clear that the routine does a fairer assignment. Take note that there are
-5 such tutorial groupings, so this type of grouping assignment has to be
-carried out five times. Here is a visualisation of the groupings:
+It is clear that the routine does a fairer assignment. Note that, as there are
+5 such tutorial groupings, this assignment has to be carried out five times.
+Here is a visualisation of the groupings:
 
 ![Diverse groupings](dba_example_hs.png)
 
 ## To Course with Sub-group Structure
 
 In the "Statement of Need" section, we mentioned a Data Science course that
-requires allocating students into project teams with 2 sub-groups. One
-sub-group typically develops a user-interface while the other works on the data
-analysis. The table below shows how `grouper` could have benefited us, if we
-could have used it over the four semesters that we taught the course.
+requires allocating students into project teams with 2 sub-groups: one
+sub-group typically develops a user-interface; and the other works on data
+analysis. The table below shows how `grouper` could have benefited us if it had
+been used over the four semesters the course was taught.
 
-Consider the first semester we ran the course (row 1): the enrolment was 62 and
-there were 4 topic titles to be allocated (with some permitted repetitions). In
-the manual allocation carried out, the average preference of the self-formed
-groups was 7.45.  *If we could have used `grouper`*, the mean preference for
-this same group of students would have been 9.53 (higher is better).
+Consider the first semester we ran the course (row 1): the enrolment was
+62 and there were 4 topic titles to be allocated (with some permitted
+repetitions). In the manual allocation carried out, the average
+preference of the self-formed groups was 8.16. *If we could have used
+`grouper`*, the mean preference for this same group of students would
+have been 9.47 (higher is better).
 
 | Sem | manual_pref | grouper_pref | class_size | n_topics | n_project_teams |
 |-----|-------------|--------------|------------|----------|-----------------|
@@ -173,10 +174,9 @@ access to it.
 # Discussion
 
 While it seems as though the improvement proffered in both applications above
-is minimal, the reader should be aware that manual allocation is extremely
-arduous. For the data science course involving sub-groups, it typically takes a
-week or more to carry out the process manually. With `grouper`, it only takes 2
-minutes! Using it will allow the educator time to focus more on course content and
-student guidance.
+is minimal, the reader should note that manual allocation is extremely arduous.
+For the data science course, manual assignment typically takes a week or more.
+With `grouper`, it only takes 2 minutes! Using it allows the educator time to
+focus more on course content and student guidance.
 
 # References
