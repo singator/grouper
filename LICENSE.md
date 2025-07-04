@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2025 grouper authors
+Copyright (c) 2025 National University of Singapore
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
