@@ -5,9 +5,7 @@ tags:
 - group assignment
 - collaborative learning
 date: "26 June 2025"
-affiliations:
-- name: National University of Singapore
-  index: 1
+output: pdf_document
 authors:
 - name: Ju Xue
   affiliation: 1
@@ -18,6 +16,9 @@ authors:
   orcid: "0000-0002-7232-2063"
   affiliation: 1
 bibliography: paper.bib
+affiliations:
+- name: National University of Singapore
+  index: 1
 ---
 
 # Summary
@@ -178,5 +179,11 @@ is minimal, the reader should note that manual allocation is extremely arduous.
 For the data science course, manual assignment typically takes a week or more.
 With `grouper`, it only takes 2 minutes! Using it allows the educator time to
 focus more on course content and student guidance.
+
+# Ethical Approvals
+
+This study has been cleared by National University of Singapore IRB (ref.
+NUS-IRB-2025-547). This study was not funded. The authors have no conflicts of
+interest to declare.
 
 # References
