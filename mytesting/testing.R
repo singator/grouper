@@ -6,6 +6,7 @@ library(ompr.roi)
 library(ROI.plugin.glpk)
 library(ROI.plugin.gurobi)
 library(yaml)
+library(grouper)
 
 extract_student_info <- function(df,
                                  demographic_cols,
@@ -138,7 +139,7 @@ yaml_list <- extract_params_yaml("mytesting/input001.yml")
 m1 <- prepare_model(df_list, yaml_list)
 
 result <- solve_model(m1, with_ROI(solver="gurobi", verbose=TRUE))
-assigned_groups <- assign_groups(result, df1, "self_groups")
+assigned_groups <- assign_groups(result, "diversity", df1, group_names="self_groups")
 
 # compute the average skill in each group:
 assigned_groups %>% group_by(topic,rep) %>%
@@ -157,10 +158,18 @@ df1 <- readRDS("mytesting/df001.rds")
 df1$self_groups <- 1:NROW(df1)
 df_list <- extract_student_info(df1, demographic_cols = 1:3, skills = 5, self_formed_groups = 4)
 yaml_list <- extract_params_yaml("mytesting/input002.yml")
-m2 <- prepare_model(df_list, yaml_list, w1=1.0, w2=0)
+m2 <- prepare_model(df_list, yaml_list, w1=0.5, w2=0.5)
+params <- list(TimeLimit=30.0)
 
-result <- solve_model(m2, with_ROI(solver="gurobi", verbose=TRUE))
-assigned_groups2 <- assign_groups(result, df1, "self_groups")
+result <- solve_model(m2, with_ROI(solver="gurobi",
+                                   TimeLimit=300.0,
+                                   BestObjStop = 8,
+                                   #SolutionLimit = 5,
+                                   verbose=TRUE))
+# parameters from:
+# https://docs.gurobi.com/projects/optimizer/en/current/concepts/parameters/groups.html#secparametergroups
+
+assigned_groups2 <- assign_groups(result, "diversity", df1, group_names="self_groups")
 
 # compute the average skill in each group:
 assigned_groups2 %>% group_by(topic,rep) %>%
