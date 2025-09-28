@@ -1,5 +1,9 @@
 # grouper 0.4.0
 
+* added functionality to use custom dissimilarity matrix in DBA
+* vignette examples added for above, and to demonstrate use of arrays in YAML
+  file.
+
 # grouper 0.3.0
 
 * Removed gurobi from Suggests
