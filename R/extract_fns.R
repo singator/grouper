@@ -24,6 +24,11 @@
 #'   num of groups x B*T, where T is the number of topics and B is the number
 #'   of sub-groups per topic. This argument is only used in the preference-based
 #'   assignment. See the Details section for more information.
+#' @param d_mat The dissimilarity matrix with number of rows equal to the
+#'   number of students. This matrix should be symmetric, with diagonals equal
+#'   to 0. This argument is only used in the diversity-based assignment. If it
+#'   is not provided, the "Gower" distance from the cluster package is used. If
+#'   this is provided, then demographic_cols is ignored.
 #'
 #' @details
 #' For the diversity-based assignment, the demographic variables are converted
@@ -65,7 +70,7 @@
 extract_student_info <- function(dframe, assignment=c("diversity", "preference"),
                                  self_formed_groups,
                                  demographic_cols, skills,
-                                 pref_mat) {
+                                 pref_mat, d_mat) {
   assignment <- match.arg(assignment)
   if(assignment == "diversity") {
     self_formed_groups_vec <- dframe[[self_formed_groups]]
@@ -78,19 +83,29 @@ extract_student_info <- function(dframe, assignment=c("diversity", "preference")
       m[i, self_formed_groups_vec[i]] <- 1
     }
 
-    # form dissimilarity mx
-    if(length(demographic_cols) == 1) {
-      if(is.character(dframe[[demographic_cols]]))
-        dframe[[demographic_cols]] <- as.factor(dframe[[demographic_cols]])
+    if(missing(d_mat)) {
+      # form dissimilarity mx
+      if(length(demographic_cols) == 1) {
+        if(is.character(dframe[[demographic_cols]]))
+          dframe[[demographic_cols]] <- as.factor(dframe[[demographic_cols]])
+          d_cols <- dframe[demographic_cols]
+      } else {
         d_cols <- dframe[demographic_cols]
-    } else {
-      d_cols <- dframe[demographic_cols]
-      char_cols <- which(sapply(d_cols, is.character))
-      for (col_id in char_cols) {
-        d_cols[[col_id]] <- as.factor(d_cols[[col_id]])
+        char_cols <- which(sapply(d_cols, is.character))
+        for (col_id in char_cols) {
+          d_cols[[col_id]] <- as.factor(d_cols[[col_id]])
+        }
       }
+      d <- as.matrix(cluster::daisy(d_cols, metric="gower"))
+    } else {
+      if(!isSymmetric(d_mat)){
+        stop("dissimilarity matrix is not symmetric.")
+      }
+      if(NROW(d_mat) != NROW(dframe)){
+        stop("dimensions of dissimilarity matrix do not match student info dataframe.")
+      }
+      d <- d_mat
     }
-    d <- as.matrix(cluster::daisy(d_cols, metric="gower"))
 
     # extract skills
     if(is.null(skills)) {

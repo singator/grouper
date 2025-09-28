@@ -104,6 +104,87 @@ get_solution(result3, smax)
 We can see that students 1 and 2 have been assigned to topic 1, repetition 1. Students 
 3 and 4 have been assigned to topic 2, repetition 1.
 
+## Dataset 003
+
+This dataset demonstrates the use of a custom dissimilarity matrix instead of
+using the default Gower distance from the
+[cluster](https://cran.r-project.org/package=cluster) package.
+
+```{r}
+dba_gc_ex003
+```
+
+Now consider a situation where we wish to consider years 1 and 2 different from
+years 3 and 4, and `math` and `dsds` (STEM majors) to be different from `elts`
+and `history` (non-STEM majors). For each difference, we assign a score of 1.
+
+This means that students 1 and 2 would have a dissimilarity score of 1 due to 
+their difference in majors. Students 1 and 3 would also have a score of 1, but 
+due to their difference in years. Students 1 and 4 would have score of 2, due to
+their differences in majors and in years. The overall dissimilarity matrix would 
+be:
+
+```{r}
+d_mat <- matrix(c(0, 1, 1, 2,
+                  1, 0, 2, 1,
+                  1, 2, 0, 1,
+                  2, 1, 1, 0), nrow=4, byrow = TRUE)
+```
+
+To run the optimisation for this model, we can execute the following code:
+
+```{r}
+df_ex003_list <- extract_student_info(dba_gc_ex003, "diversity",
+                                skills = NULL,
+                                self_formed_groups = 3,
+                                d_mat=d_mat)
+yaml_ex003_list <- extract_params_yaml(system.file("extdata",   
+                                                   "dba_params_ex003.yml",   
+                                                   package = "grouper"), 
+                                       "diversity")
+m3 <- prepare_model(df_ex003_list, yaml_ex003_list, w1=1.0, w2=0.0)
+result <- solve_model(m3, with_ROI(solver="glpk", verbose=TRUE))
+
+assign_groups(result, "diversity", dba_gc_ex003, group_names="self_groups")
+```
+
+As you can see, the members of the two groups have maximal difference between 
+them - they differ in terms of their year, and in terms of their major.
+
+## Dataset 004
+
+In this example, we demonstrate that `grouper` provides the flexibility to constrain
+group sizes for individual topics. This could be useful in a situation where a 
+particular project topic may require a larger group.
+
+The dataset we use contains only skill levels (Python skills, higher corresponding
+to more skill).
+
+```{r}
+dba_gc_ex004
+```
+
+Suppose we wish to assign the students to two topics, but the second topic requires
+3 members, and the first requires only 2. In this example, we only utilise the 
+skill levels; no demographic variables are included in the objective function.
+
+```{r}
+df_ex004_list <- extract_student_info(dba_gc_ex004, 
+                                      skills = 2, 
+                                      self_formed_groups = 3, 
+                                      d_mat=matrix(0, 5, 5))
+yaml_ex004_list <- extract_params_yaml(system.file("extdata",    
+                                                   "dba_params_ex004.yml",   
+                                                   package = "grouper"),  
+                                       "diversity")
+m4 <- prepare_model(df_ex004_list, yaml_ex004_list, w1=0.0, w2=1.0)
+result <- solve_model(m4, with_ROI(solver="glpk", verbose=TRUE))
+assign_groups(result, "diversity", dba_gc_ex004, group_names="self_groups")
+```
+
+Due to the constraints, topic 2 was assigned 3 members, while preserving the 
+total skill level in each group (to be 4).
+
 # Preference-Based Assignment
 
 ## Dataset 002

@@ -10,7 +10,8 @@ extract_student_info(
   self_formed_groups,
   demographic_cols,
   skills,
-  pref_mat
+  pref_mat,
+  d_mat
 )
 }
 \arguments{
@@ -39,6 +40,12 @@ maximises the diversity.}
 num of groups x B*T, where T is the number of topics and B is the number
 of sub-groups per topic. This argument is only used in the preference-based
 assignment. See the Details section for more information.}
+
+\item{d_mat}{The dissimilarity matrix with number of rows equal to the
+number of students. This matrix should be symmetric, with diagonals equal
+to 0. This argument is only used in the diversity-based assignment. If it
+is not provided, the "Gower" distance from the cluster package is used. If
+this is provided, then demographic_cols is ignored.}
 }
 \value{
 For the diversity-based assignment model, this function returns a

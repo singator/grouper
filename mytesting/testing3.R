@@ -1,13 +1,13 @@
 year <- 1:4
-major <- c("math", "dsds", "history", "elts")
+major <- c("math", "history", "dsds", "elts")
 df2 <- data.frame(year = year, major=major)
 df2$self_groups <- 1:NROW(df2)
 df2$id <- 1:NROW(df2)
 
-d_mat <- matrix(c(0, 1, 2, 2,
-                  1, 0, 2, 2,
-                  2, 2, 0, 1,
-                  2, 2, 1, 0), nrow=4, byrow = TRUE)
+d_mat <- matrix(c(0, 1, 1, 2,
+                  1, 0, 2, 1,
+                  1, 2, 0, 1,
+                  2, 1, 1, 0), nrow=4, byrow = TRUE)
 
 df_list <- extract_student_info(df2,
                                 skills = NULL,

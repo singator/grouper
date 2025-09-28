@@ -40,3 +40,34 @@
 #'
 #' @source This dataset was constructed by hand.
 "pba_prefmat_ex002"
+
+#' DBA Group Composition Data Example 003
+#'
+#' An example dataset to use with the diversity-based assignment model. It is
+#' used to demonstrate the use of a custom dissimilarity matrix.
+#'
+#' @format ## `dba_gc_ex003`
+#' A matrix with 4 rows and 4 columns
+#'
+#' * id: the student id of each students, simply the integers 1 to 4.
+#' * self_groups: The self-formed groups
+#' * year, major: demographics used in computing dissimilarities
+#'
+#' @source This dataset was constructed by hand.
+"dba_gc_ex003"
+
+#' DBA Group Composition Data Example 004
+#'
+#' An example dataset to use with the diversity-based assignment model. It is
+#' used to demonstrate the use of a vectors to indicate individual group size
+#' constraints for specific topics.
+#'
+#' @format ## `dba_gc_ex004`
+#' A matrix with 5 rows and 4 columns
+#'
+#' * id: the student id of each students, simply the integers 1 to 4.
+#' * self_groups: The self-formed groups
+#' * python: Python skill level - 1 is lowest, 3 is highest.
+#'
+#' @source This dataset was constructed by hand.
+"dba_gc_ex004"

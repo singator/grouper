@@ -156,18 +156,22 @@ assigned_groups %>% group_by(topic, rep) %>%
 
 df1 <- readRDS("mytesting/df001.rds")
 df1$self_groups <- 1:NROW(df1)
-df_list <- extract_student_info(df1, demographic_cols = 1:3, skills = 5, self_formed_groups = 4)
+df_list <- extract_student_info(df1, demographic_cols = 2:3, skills = 5, self_formed_groups = 4)
 yaml_list <- extract_params_yaml("mytesting/input002.yml")
-m2 <- prepare_model(df_list, yaml_list, w1=0.5, w2=0.5)
-params <- list(TimeLimit=30.0)
+m2 <- prepare_model(df_list, yaml_list, w1=1.0, w2=0.0)
 
 result <- solve_model(m2, with_ROI(solver="gurobi",
                                    TimeLimit=300.0,
-                                   BestObjStop = 8,
+                                   # BestObjStop = 8,
+                                   PoolSolutions = 3,
                                    #SolutionLimit = 5,
                                    verbose=TRUE))
 # parameters from:
 # https://docs.gurobi.com/projects/optimizer/en/current/concepts/parameters/groups.html#secparametergroups
+# To obtain solution pool:
+# result$additional_solver_output$ROI$message$pool[[1]]$xn
+# get_solution(result, x[g,t,r]) %>% filter(value > 0) %>% View
+# result$solution[21:30]
 
 assigned_groups2 <- assign_groups(result, "diversity", df1, group_names="self_groups")
 
