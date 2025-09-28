@@ -1,3 +1,5 @@
+# grouper 0.4.0
+
 # grouper 0.3.0
 
 * Removed gurobi from Suggests
