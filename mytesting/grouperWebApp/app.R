@@ -1,33 +1,31 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    https://shiny.posit.co/
-#
-
 library(shiny)
 library(bslib)
+library(magrittr)
+library(grouper)
+library(ompr)
+library(ompr.roi)
+library(ROI.plugin.glpk)
 
 ui <- page_navbar(
   nav_panel("Optimise",
             h2("Model preparation"),
-            fluidRow(
             tabsetPanel(
               tabPanel("Diversity-based",
                        fluidRow(
                         h3("Student information input"),
-                        br(),
-                        h3("Model parameters")
+                        fileInput("stud_info", "Upload a file:"),
+                        actionButton("prepare", "Prepare model:")
                        ),
               ),
               tabPanel("Preference-based", "Placeholder")
-            )
             ),
             hr(),
             p("This is a new paragraph."),
-            h3("Optimisation termination criteria")
+            actionButton("optimise", "Optimise"),
+            h3("Optimisation termination criteria"),
+            verbatimTextOutput("file1_contents"),
+            textOutput("model_prep"),
+            textOutput("optimised"),
             ),
   nav_panel("Documentation",
             includeMarkdown("help.md")),
@@ -37,7 +35,31 @@ ui <- page_navbar(
 )
 
 server <- function(input, output) {
+  m4 <- reactive({
+    df_ex004_list <- extract_student_info(dba_gc_ex004,
+                                          skills = 2,
+                                          self_formed_groups = 3,
+                                          d_mat=matrix(0, 5, 5))
+    yaml_ex004_list <- extract_params_yaml(system.file("extdata",
+                                                       "dba_params_ex004.yml",
+                                                       package = "grouper"),
+                                           "diversity")
+    prepare_model(df_ex004_list, yaml_ex004_list, w1=0.0, w2=1.0)
+  }) %>%
+    bindEvent(input$prepare)
 
+  output$file1_contents <- renderPrint({print(input$stud_info)})
+
+  output$model_prep <- renderText({
+    return("Model prepared.")
+  }) %>%
+    bindEvent(input$prepare)
+
+  output$optimised <- renderText({
+    result <- solve_model(m4(), with_ROI(solver="glpk", verbose=TRUE))
+    return("Model optimised!")
+  })%>%
+    bindEvent(input$optimise)
 }
 
 shinyApp(ui = ui, server = server)
