@@ -48,18 +48,23 @@ server <- function(input, output) {
   }) %>%
     bindEvent(input$prepare)
 
+  result <- reactive({
+    solve_model(m4(), with_ROI(solver="glpk", verbose=TRUE))
+  }) %>%
+    bindEvent(input$optimise)
+
   output$file1_contents <- renderPrint({print(input$stud_info)})
 
   output$model_prep <- renderText({
+    m4()
     return("Model prepared.")
-  }) %>%
-    bindEvent(input$prepare)
+  })
 
   output$optimised <- renderText({
-    result <- solve_model(m4(), with_ROI(solver="glpk", verbose=TRUE))
+    result()
     return("Model optimised!")
-  })%>%
-    bindEvent(input$optimise)
+  })
+
 }
 
 shinyApp(ui = ui, server = server)
