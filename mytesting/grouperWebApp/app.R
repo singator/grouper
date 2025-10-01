@@ -50,8 +50,9 @@ ui <- page_navbar(
                         ),
 
                         fluidRow(
-                          column(width=4, "Verify column selection"),
-                          column(width=6, "Columns verified")
+                          column(width=4, actionButton("verify_col",
+                                                       "Verify columns")),
+                          column(width=6, textOutput("col_verified"))
                         ),
 
                         hr(),
@@ -93,6 +94,11 @@ server <- function(input, output, session) {
     }
     df
   })
+
+  output$col_verified <- renderText({
+    "Hello"
+  }) %>%
+    bindEvent(input$verify_col)
 
   output$stud_info_preview <- renderDT({
     df <- input$stud_info
