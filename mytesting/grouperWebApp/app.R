@@ -6,8 +6,10 @@ library(grouper)
 library(ompr)
 library(ompr.roi)
 library(ROI.plugin.glpk)
-
+library(ROI.plugin.gurobi)
 library(readxl)
+
+source('utils.R')
 
 ui <- page_navbar(
   nav_panel("Optimise",
@@ -50,9 +52,10 @@ ui <- page_navbar(
                         ),
 
                         fluidRow(
-                          column(width=4, actionButton("verify_col",
-                                                       "Verify columns")),
-                          column(width=6, textOutput("col_verified"))
+                          column(width=4,
+                                 actionButton("verify_col", "Verify columns")),
+                          column(width=6,
+                                 textOutput("col_verified"))
                         ),
 
                         hr(),
@@ -60,20 +63,50 @@ ui <- page_navbar(
                         p('Select the parameters for your model here, e.g. number
                           of topics, number of members, etc.'),
 
+                        fluidRow(
+                          column(width=4,
+                                 numericInput("num_topics", "No. of topics:",
+                                              1, min=1, step=1)),
+                          column(width=4,
+                                 numericInput("n_min", "Min. group size:",
+                                              1, min=1, step=1)),
+                          column(width=4,
+                                 numericInput("n_max", "Max. group size:",
+                                              2, min=1, step=1))
+                        ),
 
-                        actionButton("prepare", "Prepare model:")
+                        hr(),
+                        h3("Step 3: Prepare model"),
+                        p('Click on the button to prepare the model'),
+
+                        fluidRow(
+                          column(width=4,
+                                 actionButton("prepare", "Prepare model")),
+                          column(width=6,
+                                 textOutput("model_prepared"))
+                        ),
+
               ),
               tabPanel("Preference-based", "Placeholder")
             ),
+
             hr(),
-            p("This is a new paragraph."),
-            actionButton("optimise", "Optimise"),
-            h3("Optimisation termination criteria"),
-            verbatimTextOutput("file1_contents"),
-            textOutput("model_prep"),
-            textOutput("optimised"),
-            actionButton("merge", "Merge dataframes"),
-            textOutput("merged"),
+            h3("Step 4: Optimisation termination criteria"),
+            p("Enter the termination criteria you wish to set, then click optimise."),
+            fluidRow(
+              column(width=4, numericInput("time_limit", "Time limit (sec)", 60, min=1, step=0.1)),
+              column(width=4, numericInput("work_limit", "Work units", 1, min=1, step=1)),
+              column(width=4, numericInput("iteration_limit", "Iteration limit", 1, min=1, step=1))
+              ),
+            fluidRow( column(width=4, actionButton("optimise", "Optimise")),
+                      column(width=6, textOutput("optimisation_output"))
+                      ),
+
+            hr(),
+            h3("Step 5: Merge with original data"),
+            fluidRow( column(width=4, actionButton("merge", "Merge dataframes")),
+                      column(width=6, textOutput("merged_output"))
+                      ),
             ),
   nav_panel("Documentation",
             includeMarkdown("help.md")),
@@ -95,8 +128,28 @@ server <- function(input, output, session) {
     df
   })
 
+  output$model_prepared <- renderText({
+    m4()
+    "Model prepared."
+  })
+
+  output$optimisation_output <- renderText({
+    result()
+    return("Model optimised!")
+  })
+
+  output$merged_output <- renderText({
+    merged_df()
+    return("Df merged.")
+  })
+
+
+
   output$col_verified <- renderText({
-    "Hello"
+    output_string <- verify_columns(input$group_var,
+                                    input$demographic_vars,
+                                    input$skill_var)
+    output_string
   }) %>%
     bindEvent(input$verify_col)
 
@@ -132,87 +185,48 @@ server <- function(input, output, session) {
   })
 
   m4 <- reactive({
-    df_ex004_list <- extract_student_info(dba_gc_ex004,
-                                          skills = 2,
-                                          self_formed_groups = 3,
-                                          d_mat=matrix(0, 5, 5))
-    yaml_ex004_list <- extract_params_yaml(system.file("extdata",
-                                                       "dba_params_ex004.yml",
-                                                       package = "grouper"),
-                                           "diversity")
-    prepare_model(df_ex004_list, yaml_ex004_list, w1=0.0, w2=1.0)
+    df_col_names <- colnames(stud_info_df())
+
+    skills_col_no <- match(input$skill_var, df_col_names)
+    demo_col_no <- match(input$demographic_vars, df_col_names)
+    grouping_col_no <- match(input$group_var, df_col_names)
+
+    df_list <- extract_student_info(stud_info_df(), assignment = "diversity",
+                                    self_formed_groups = grouping_col_no,
+                                    demographic_cols = demo_col_no,
+                                    skills = skills_col_no)
+    yaml_list <- list(n_topics = input$num_topics,
+                      R = 1,
+                      rmin=1, rmax=1,
+                      nmin = matrix(input$n_min,
+                                    nrow=input$num_topics,
+                                    ncol=1, byrow=TRUE),
+                      nmax = matrix(input$n_max,
+                                    nrow=input$num_topics,
+                                    ncol=1, byrow=TRUE))
+
+    prepare_model(df_list, yaml_list, w1=1.0, w2=0.0)
   }) %>%
     bindEvent(input$prepare)
 
   result <- reactive({
-    solve_model(m4(), with_ROI(solver="glpk", verbose=TRUE))
+    solve_model(m4(), with_ROI(solver="gurobi", verbose=TRUE))
   }) %>%
     bindEvent(input$optimise)
 
   merged_df <- reactive({
-    assign_groups(result(), "diversity", dba_gc_ex004,
-                  group_names="self_groups")
+    assign_groups(result(), "diversity", stud_info_df(), group_names=input$group_var)
   }) %>%
     bindEvent(input$merge)
 
-  output$file1_contents <- renderPrint({print(input$stud_info)})
+  # output$file1_contents <- renderPrint({print(input$stud_info)})
 
-  output$model_prep <- renderText({
-    m4()
-    return("Model prepared.")
-  })
-
-  output$optimised <- renderText({
-    result()
-    return("Model optimised!")
-  })
-
-  output$merged <- renderText({
-    merged_df()
-    return("Df merged.")
-  })
+  #output$model_prep <- renderText({
+  #  m4()
+  #  return("Model prepared.")
+  #})
 
 }
-
-shinyApp(ui = ui, server = server)
-
-# # Define UI for application that draws a histogram
-# ui <- fluidPage(
-#
-#     # Application title
-#     titlePanel("Old Faithful Geyser Data"),
-#
-#     # Sidebar with a slider input for number of bins
-#     sidebarLayout(
-#         sidebarPanel(
-#             sliderInput("bins",
-#                         "Number of bins:",
-#                         min = 1,
-#                         max = 50,
-#                         value = 30)
-#         ),
-#
-#         # Show a plot of the generated distribution
-#         mainPanel(
-#            plotOutput("distPlot")
-#         )
-#     )
-# )
-#
-# # Define server logic required to draw a histogram
-# server <- function(input, output) {
-#
-#     output$distPlot <- renderPlot({
-#         # generate bins based on input$bins from ui.R
-#         x    <- faithful[, 2]
-#         bins <- seq(min(x), max(x), length.out = input$bins + 1)
-#
-#         # draw the histogram with the specified number of bins
-#         hist(x, breaks = bins, col = 'darkgray', border = 'white',
-#              xlab = 'Waiting time to next eruption (in mins)',
-#              main = 'Histogram of waiting times')
-#     })
-# }
 
 # Run the application
 shinyApp(ui = ui, server = server)
