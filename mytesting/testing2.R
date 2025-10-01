@@ -169,15 +169,19 @@ group_pref_mat1 <- readRDS("data005-preference.rds")[,-c(1,6)]
 df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
 yaml_list <- extract_params_yaml2("mdl02_input05.yml")
 mdl2_5 <- prepare_model2(df_list, yaml_list)
-result <- solve_model(mdl2_5, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(mdl2_5, with_ROI(solver="gurobi",
+                                       verbose=TRUE))
 
 ## DSA3101-2210
 group_comp_df1 <- readRDS("data006-composition.rds")
 group_pref_mat1 <- readRDS("data006-preference.rds")
-df_list <- extract_student_info2(group_comp_df1, 2, group_pref_mat1)
-yaml_list <- extract_params_yaml2("mdl02_input06.yml")
-mdl2_6 <- prepare_model2(df_list, yaml_list)
-result <- solve_model(mdl2_6, with_ROI(solver="gurobi", verbose=TRUE))
+df_list <- extract_student_info(group_comp_df1, "preference", self_formed_groups = 2,
+                                pref_mat=group_pref_mat1)
+yaml_list <- extract_params_yaml("mdl02_input06.yml", "preference")
+mdl2_6 <- prepare_model(df_list, yaml_list, 'preference')
+result <- solve_model(mdl2_6, with_ROI(solver="gurobi",
+                                       IterationLimit =10,
+                                       verbose=TRUE))
 da3101_2210_outcome <- assign_groups2(result, group_comp_df1, yaml_list, "group_id")
 
 ## DSA3101-2220
