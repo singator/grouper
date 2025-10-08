@@ -68,7 +68,11 @@ ui <- page_navbar(
                                               1, min=1, step=1)),
                           column(width=4,
                                  numericInput("n_max", "Max. group size:",
-                                              2, min=1, step=1))
+                                              2, min=1, step=1)),
+                          column(width=4,
+                                 numericInput("w_1_input", "Demographics weight (w1)",
+                                              0.5, min=0, max=1, step=0.001)),
+                          column(width=4, textOutput("w_2_text"))
                         ),
 
                         hr(),
@@ -108,7 +112,8 @@ ui <- page_navbar(
             hr(),
             h3("Step 5: Merge with original data"),
             fluidRow( column(width=4, actionButton("merge", "Merge dataframes")),
-                      column(width=6, textOutput("merged_output"))
+                      column(width=4, textOutput("merged_output")),
+                      column(width=4, downloadLink("download_df", "Download"))
                       ),
             ),
   nav_panel("Documentation",
@@ -129,6 +134,17 @@ server <- function(input, output, session) {
       df <- read_excel(fname)
     }
     df
+  })
+
+  w_2 <- reactive({
+    1 - w_1()
+  })
+  w_1 <- reactive({
+    input$w_1_input
+  })
+
+  output$w_2_text <- renderText({
+    paste("Skill weight (w2): ", sprintf("%.3f", w_2()))
   })
 
   output$model_prepared <- renderText({
@@ -236,6 +252,13 @@ server <- function(input, output, session) {
     assign_groups(result(), "diversity", stud_info_df(), group_names=input$group_var)
   }) %>%
     bindEvent(input$merge)
+
+  output$download_df <- downloadHandler(
+    filename = "model_output.csv",
+    content = function(file) {
+      write.csv(merged_df(), file, row.names=FALSE)
+    }
+  )
 
 }
 
