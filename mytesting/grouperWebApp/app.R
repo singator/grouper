@@ -88,11 +88,18 @@ ui <- page_navbar(
 
             hr(),
             h3("Step 4: Optimisation termination criteria"),
-            p("Enter the termination criteria you wish to set, then click optimise."),
+            p("Enter the termination criteria you wish to set, then click optimise.
+              To learn more about the criteria below, please take a look at the
+              following link:"),
+            a("Gurobi optimisation parameters", href="https://docs.gurobi.com/projects/optimizer/en/current/concepts/parameters/groups.html#paramgrouptermination"),
+            p("As long as one of the criteria below is reached, the optimisation will terminate.
+              It is good to set one of the above during the initial runs, just to make
+              sure that the model is running properly before allowing it to run to
+              completion. If you do not wish to set both criteria, just
+              leave the one you do not wish to set as 0."),
             fluidRow(
-              column(width=4, numericInput("time_limit", "Time limit (sec)", 60, min=1, step=0.1)),
-              column(width=4, numericInput("work_limit", "Work units", 1, min=1, step=1)),
-              column(width=4, numericInput("iteration_limit", "Iteration limit", 1, min=1, step=1))
+              column(width=4, numericInput("time_limit", "Time limit (sec)", 60, min=0, step=0.1)),
+              column(width=4, numericInput("iteration_limit", "Iteration limit", 1, min=0, step=1))
               ),
             fluidRow( column(width=4, actionButton("optimise", "Optimise")),
                       column(width=6, textOutput("optimisation_output"))
@@ -206,7 +213,22 @@ server <- function(input, output, session) {
     bindEvent(input$prepare)
 
   result <- reactive({
-    solve_model(m4(), with_ROI(solver="gurobi", verbose=TRUE))
+    if(input$time_limit == 0){
+      time_limit = Inf
+    } else {
+      time_limit = input$time_limit
+    }
+
+    if(input$iteration_limit == 0){
+      it_limit = Inf
+    } else {
+      it_limit = input$iteration_limit
+    }
+
+    solve_model(m4(), with_ROI(solver="gurobi",
+                               TimeLimit = time_limit,
+                               IterationLimit = it_limit,
+                               verbose=TRUE))
   }) %>%
     bindEvent(input$optimise)
 
@@ -214,13 +236,6 @@ server <- function(input, output, session) {
     assign_groups(result(), "diversity", stud_info_df(), group_names=input$group_var)
   }) %>%
     bindEvent(input$merge)
-
-  # output$file1_contents <- renderPrint({print(input$stud_info)})
-
-  #output$model_prep <- renderText({
-  #  m4()
-  #  return("Model prepared.")
-  #})
 
 }
 
