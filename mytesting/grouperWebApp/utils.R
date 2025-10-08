@@ -21,3 +21,16 @@ verify_columns <- function(groupings, demographics, skills) {
   return("Columns verified")
 }
 
+verify_params <- function(demographics, skills, w1, w2) {
+  if(demographics == "No demographics"){
+    if(w1 > 0 ){
+      return("Please set w1 to be 0 since no demographics are used.")
+    }
+  } else if (skills == "No skills") {
+    if(w1 < 1 ){
+      return("Please set w1 to be 1 since no skills are used.")
+    }
+  }
+
+  return("OK")
+}

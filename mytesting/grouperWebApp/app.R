@@ -149,6 +149,9 @@ server <- function(input, output, session) {
 
   output$model_prepared <- renderText({
     m4()
+    if(inherits(m4(), "character")){
+      return(m4())
+    }
     "Model prepared."
   })
 
@@ -204,6 +207,14 @@ server <- function(input, output, session) {
   })
 
   m4 <- reactive({
+    verification <- verify_params(input$demographic_vars,
+                                  input$skill_var,
+                                  w_1(),
+                                  w_2())
+    print(verification)
+    if(verification != "OK") {
+      return(verification)
+    }
     df_col_names <- colnames(stud_info_df())
 
     skills_col_no <- match(input$skill_var, df_col_names)
@@ -224,7 +235,7 @@ server <- function(input, output, session) {
                                     nrow=input$num_topics,
                                     ncol=1, byrow=TRUE))
 
-    prepare_model(df_list, yaml_list, w1=1.0, w2=0.0)
+    prepare_model(df_list, yaml_list, w1=w_1(), w2=w_2())
   }) %>%
     bindEvent(input$prepare)
 
