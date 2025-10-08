@@ -14,6 +14,9 @@ verify_columns <- function(groupings, demographics, skills) {
   if(length(groupings) > 1){
     return("There should only be one column for self-formed groups.")
   }
+  if(demographics == "No demographics" && skills == "No skills"){
+    return("At least one of demographics or skills needs to be used.")
+  }
 
   return("Columns verified")
 }

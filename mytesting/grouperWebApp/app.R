@@ -34,18 +34,14 @@ ui <- page_navbar(
 
                         fluidRow(
                           column(width=4,
-                          "Select the column corresponding to the groups.",
                           uiOutput("group_selection")
                           ),
 
                           column(width=4,
-                          "Select the column(s) corresponding to the demographic
-                          variables:",
                           uiOutput("demographic_selection")
                           ),
 
                           column(width=4,
-                          "Select the column corresponding to the skill:",
                           uiOutput("skill_selection")
                           ),
 
@@ -150,7 +146,7 @@ server <- function(input, output, session) {
                                     input$demographic_vars,
                                     input$skill_var)
     output_string
-  }) %>%
+  }, sep="\n") %>%
     bindEvent(input$verify_col)
 
   output$stud_info_preview <- renderDT({
@@ -164,23 +160,23 @@ server <- function(input, output, session) {
     df <- input$stud_info
     req(df)
     col_names <- colnames(stud_info_df())
-    selectizeInput("group_var", label="Column names:",
+    selectizeInput("group_var", label="Group column:",
                    choices=col_names, multiple=FALSE)
   })
 
   output$demographic_selection <- renderUI({
     df <- input$stud_info
     req(df)
-    col_names <- colnames(stud_info_df())
-    selectizeInput("demographic_vars", label="Column names:",
+    col_names <- c(colnames(stud_info_df()), "No demographics")
+    selectizeInput("demographic_vars", label="Demographic column(s):",
                    choices=col_names, multiple=TRUE)
   })
 
   output$skill_selection <- renderUI({
     df <- input$stud_info
     req(df)
-    col_names <- colnames(stud_info_df())
-    selectizeInput("skill_var", label="Column names:",
+    col_names <- c(colnames(stud_info_df()), "No skills")
+    selectizeInput("skill_var", label="Skill column:",
                    choices=col_names, multiple=FALSE)
   })
 
