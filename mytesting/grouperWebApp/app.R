@@ -87,7 +87,20 @@ ui <- page_navbar(
                         ),
 
               ),
-              tabPanel("Preference-based", "Placeholder")
+              tabPanel("Preference-based",
+                        br(),
+                        h3("Step 1: Student information input"),
+
+                        p('Upload a csv or excel file that contains information on the
+                          students in your course. There should be one row for each
+                          student. There should also be a column containing the
+                          groupings.'),
+                        fluidRow(
+                          column(width=4, fileInput("stud_info_pba", "Upload a file:",
+                                              accept=c(".csv", ".xlsx")) ),
+                          column(width=6, DTOutput("stud_info_preview_pba"))
+                        )
+              )
             ),
 
             hr(),
@@ -103,7 +116,7 @@ ui <- page_navbar(
               leave the one you do not wish to set as 0."),
             fluidRow(
               column(width=4, numericInput("time_limit", "Time limit (sec)", 60, min=0, step=0.1)),
-              column(width=4, numericInput("iteration_limit", "Iteration limit", 1, min=0, step=1))
+              column(width=4, numericInput("iteration_limit", "Iteration limit", 100, min=0, step=1))
               ),
             fluidRow( column(width=4, actionButton("optimise", "Optimise")),
                       column(width=6, textOutput("optimisation_output"))
@@ -127,6 +140,16 @@ server <- function(input, output, session) {
 
   stud_info_df <- reactive({
     fname <- input$stud_info$datapath
+    f_ext <- tools::file_ext(fname)
+    if(f_ext == "csv"){
+      df <- read.csv(fname)
+    } else if (f_ext == "xlsx"){
+      df <- read_excel(fname)
+    }
+    df
+  })
+  stud_info_df_pba <- reactive({
+    fname <- input$stud_info_pba$datapath
     f_ext <- tools::file_ext(fname)
     if(f_ext == "csv"){
       df <- read.csv(fname)
@@ -181,6 +204,12 @@ server <- function(input, output, session) {
     stud_info_df()
     # NULL
   }, options=list(scrollX = TRUE))
+  output$stud_info_preview_pba <- renderDT({
+    df <- input$stud_info_pba
+    req(df)
+    stud_info_df_pba()
+    # NULL
+  }, options=list(scrollX = TRUE))
 
   output$group_selection <- renderUI({
     df <- input$stud_info
@@ -211,20 +240,37 @@ server <- function(input, output, session) {
                                   input$skill_var,
                                   w_1(),
                                   w_2())
-    print(verification)
-    if(verification != "OK") {
+    #print(verification)
+    if(verification != "Parameter weights specified ok.") {
       return(verification)
     }
     df_col_names <- colnames(stud_info_df())
 
-    skills_col_no <- match(input$skill_var, df_col_names)
-    demo_col_no <- match(input$demographic_vars, df_col_names)
     grouping_col_no <- match(input$group_var, df_col_names)
-
-    df_list <- extract_student_info(stud_info_df(), assignment = "diversity",
+    if(input$skill_var == "No skills") {
+      skills_col_no <- NULL
+      demo_col_no <- match(input$demographic_vars, df_col_names)
+      df_list <- extract_student_info(stud_info_df(), assignment = "diversity",
+                                      self_formed_groups = grouping_col_no,
+                                      demographic_cols = demo_col_no,
+                                      skills = skills_col_no)
+    } else if(input$demographic_vars == "No demographics") {
+      demo_col_no <- NULL
+      skills_col_no <- match(input$skill_var, df_col_names)
+      df_list <- extract_student_info(stud_info_df(), assignment = "diversity",
+                                      self_formed_groups = grouping_col_no,
+                                      d_mat = matrix(0, NROW(stud_info_df()),
+                                                     NCOL(stud_info_df())),
+                                      skills = skills_col_no)
+    } else {
+      skills_col_no <- match(input$skill_var, df_col_names)
+      demo_col_no <- match(input$demographic_vars, df_col_names)
+      df_list <- extract_student_info(stud_info_df(), assignment = "diversity",
                                     self_formed_groups = grouping_col_no,
                                     demographic_cols = demo_col_no,
                                     skills = skills_col_no)
+    }
+
     yaml_list <- list(n_topics = input$num_topics,
                       R = 1,
                       rmin=1, rmax=1,
