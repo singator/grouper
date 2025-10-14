@@ -44,6 +44,52 @@ ui <- fluidPage(
                         accept=c(".csv", ".xlsx")) ),
     column(width=4, textOutput("stud_pref_message_pba"))
   ),
+  fluidRow(
+    column(width=4, uiOutput("group_selection"))
+  ),
+  hr(),
+  h3("Step 2: Model parameters"),
+  p('Select the parameters for your model here, e.g. number of topics,
+    number of members, etc.'),
+  fluidRow(
+    column(width=4,
+           numericInput("num_reps", "No. of repetition of each topic:", 1, min=1, step=1)),
+    column(width=4,
+           numericInput("n_min", "Min. group size:", 1, min=1, step=1)),
+    column(width=4,
+           numericInput("n_max", "Max. group size:", 2, min=1, step=1))
+  ),
+  hr(),
+  h3("Step 3: Prepare model"),
+  p('Click on the button to prepare the model'),
+  fluidRow(
+    column(width=4,  actionButton("prepare", "Prepare model")),
+    column(width=6,  textOutput("model_prepared"))
+  ),
+  hr(),
+  h3("Step 4: Optimisation termination criteria"),
+  p("Enter the termination criteria you wish to set, then click optimise.
+     To learn more about the criteria below, please take a look at the
+     following link:"),
+  a("Gurobi optimisation parameters", href="https://docs.gurobi.com/projects/optimizer/en/current/concepts/parameters/groups.html#paramgrouptermination"),
+  p("As long as one of the criteria below is reached, the optimisation will terminate.
+     It is good to set one of the above during the initial runs, just to make
+     sure that the model is running properly before allowing it to run to
+     completion. If you do not wish to set both criteria, just leave the one you
+     do not wish to set as 0."),
+  fluidRow(
+    column(width=4, numericInput("time_limit", "Time limit (sec)", 60, min=0, step=0.1)),
+    column(width=4, numericInput("iteration_limit", "Iteration limit", 100, min=0, step=1))
+    ),
+  fluidRow( column(width=4, actionButton("optimise", "Optimise")),
+            column(width=6, textOutput("optimisation_output"))
+            ),
+  hr(),
+  h3("Step 5: Merge with original data"),
+  fluidRow( column(width=4, actionButton("merge", "Merge dataframes")),
+            column(width=4, textOutput("merged_output")),
+            column(width=4, downloadLink("download_df", "Download"))
+            )
 )
 
 # Define server logic required to draw a histogram
