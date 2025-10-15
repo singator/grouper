@@ -89,7 +89,8 @@ ui <- fluidPage(
   fluidRow( column(width=4, actionButton("merge", "Merge dataframes")),
             column(width=4, textOutput("merged_output")),
             column(width=4, downloadLink("download_df", "Download"))
-            )
+            ),
+  theme = bs_theme(bootswatch = "minty")
 )
 
 # Define server logic required to draw a histogram
@@ -136,8 +137,92 @@ server <- function(input, output, session) {
   output$stud_pref_message_pba <- renderText({
     mat1 <- input$stud_pref_pba
     req(mat1)
-    "Preference matrix read in"
+    paste0("Preference matrix read in with ",
+           NCOL(stud_pref_mat_pba()), " topics.")
   })
+
+  yaml_list <- reactive({
+    n_topics <- NCOL(stud_pref_mat_pba())
+    list(n_topics = n_topics,
+         B = 1,
+         R = input$num_reps,
+         rmin=input$num_reps, rmax=input$num_reps,
+         nmin = matrix(input$n_min,
+                       nrow=n_topics*input$num_reps,
+                       ncol=1, byrow=TRUE),
+         nmax = matrix(input$n_max,
+                       nrow=n_topics*input$num_reps,
+                       ncol=1, byrow=TRUE))
+  })
+
+  m4 <- reactive({
+    df_col_names <- colnames(stud_info_df_pba())
+    grouping_col_no <- match(input$group_var, df_col_names)
+
+    df_list <- extract_student_info(stud_info_df_pba(), "preference",
+                                    self_formed_groups = grouping_col_no,
+                                    pref_mat = stud_pref_mat_pba())
+
+    #browser()
+   #print(yaml_list)
+
+    prepare_model(df_list, yaml_list(), "preference")
+    #return(1)
+  }) %>%
+    bindEvent(input$prepare)
+
+  output$model_prepared <- renderText({
+    m4()
+    if(inherits(m4(), "character")){
+      return(m4())
+    }
+    "Model prepared."
+  })
+
+  result <- reactive({
+    if(input$time_limit == 0){
+      time_limit = Inf
+    } else {
+      time_limit = input$time_limit
+    }
+
+    if(input$iteration_limit == 0){
+      it_limit = Inf
+    } else {
+      it_limit = input$iteration_limit
+    }
+
+    solve_model(m4(), with_ROI(solver="gurobi",
+                               TimeLimit = time_limit,
+                               IterationLimit = it_limit,
+                               verbose=TRUE))
+  }) %>%
+    bindEvent(input$optimise)
+
+  output$optimisation_output <- renderText({
+    result()
+    return("Model optimised!")
+  })
+
+  merged_df <- reactive({
+    assign_groups(result(), "preference",
+                  dframe=stud_info_df_pba(),
+                  yaml_list(),
+                  group_names=input$group_var)
+  }) %>%
+    bindEvent(input$merge)
+
+  output$merged_output <- renderText({
+    merged_df()
+    return("Df merged.")
+  })
+
+  output$download_df <- downloadHandler(
+    filename = "model_output.csv",
+    content = function(file) {
+      write.csv(merged_df(), file, row.names=FALSE)
+    }
+  )
 
 }
 
