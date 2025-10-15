@@ -137,6 +137,7 @@ ui <- page_navbar(
 )
 
 server <- function(input, output, session) {
+  ## Reactive objects
 
   stud_info_df <- reactive({
     fname <- input$stud_info$datapath
@@ -164,75 +165,6 @@ server <- function(input, output, session) {
   })
   w_1 <- reactive({
     input$w_1_input
-  })
-
-  output$w_2_text <- renderText({
-    paste("Skill weight (w2): ", sprintf("%.3f", w_2()))
-  })
-
-  output$model_prepared <- renderText({
-    m4()
-    if(inherits(m4(), "character")){
-      return(m4())
-    }
-    "Model prepared."
-  })
-
-  output$optimisation_output <- renderText({
-    result()
-    return("Model optimised!")
-  })
-
-  output$merged_output <- renderText({
-    merged_df()
-    return("Df merged.")
-  })
-
-
-
-  output$col_verified <- renderText({
-    output_string <- verify_columns(input$group_var,
-                                    input$demographic_vars,
-                                    input$skill_var)
-    output_string
-  }, sep="\n") %>%
-    bindEvent(input$verify_col)
-
-  output$stud_info_preview <- renderDT({
-    df <- input$stud_info
-    req(df)
-    stud_info_df()
-    # NULL
-  }, options=list(scrollX = TRUE))
-  output$stud_info_preview_pba <- renderDT({
-    df <- input$stud_info_pba
-    req(df)
-    stud_info_df_pba()
-    # NULL
-  }, options=list(scrollX = TRUE))
-
-  output$group_selection <- renderUI({
-    df <- input$stud_info
-    req(df)
-    col_names <- colnames(stud_info_df())
-    selectizeInput("group_var", label="Group column:",
-                   choices=col_names, multiple=FALSE)
-  })
-
-  output$demographic_selection <- renderUI({
-    df <- input$stud_info
-    req(df)
-    col_names <- c(colnames(stud_info_df()), "No demographics")
-    selectizeInput("demographic_vars", label="Demographic column(s):",
-                   choices=col_names, multiple=TRUE)
-  })
-
-  output$skill_selection <- renderUI({
-    df <- input$stud_info
-    req(df)
-    col_names <- c(colnames(stud_info_df()), "No skills")
-    selectizeInput("skill_var", label="Skill column:",
-                   choices=col_names, multiple=FALSE)
   })
 
   m4 <- reactive({
@@ -310,12 +242,89 @@ server <- function(input, output, session) {
   }) %>%
     bindEvent(input$merge)
 
+  ## Output widgets for DBA
+
+  output$w_2_text <- renderText({
+    paste("Skill weight (w2): ", sprintf("%.3f", w_2()))
+  })
+
+  output$col_verified <- renderText({
+    output_string <- verify_columns(input$group_var,
+                                    input$demographic_vars,
+                                    input$skill_var)
+    output_string
+  }, sep="\n") %>%
+    bindEvent(input$verify_col)
+
+  output$stud_info_preview <- renderDT({
+    df <- input$stud_info
+    req(df)
+    stud_info_df()
+    # NULL
+  }, options=list(scrollX = TRUE))
+
+  output$group_selection <- renderUI({
+    df <- input$stud_info
+    req(df)
+    col_names <- colnames(stud_info_df())
+    selectizeInput("group_var", label="Group column:",
+                   choices=col_names, multiple=FALSE)
+  })
+
+  output$demographic_selection <- renderUI({
+    df <- input$stud_info
+    req(df)
+    col_names <- c(colnames(stud_info_df()), "No demographics")
+    selectizeInput("demographic_vars", label="Demographic column(s):",
+                   choices=col_names, multiple=TRUE)
+  })
+
+  output$skill_selection <- renderUI({
+    df <- input$stud_info
+    req(df)
+    col_names <- c(colnames(stud_info_df()), "No skills")
+    selectizeInput("skill_var", label="Skill column:",
+                   choices=col_names, multiple=FALSE)
+  })
+
+
+  ## Common output widgets
+
+  output$model_prepared <- renderText({
+    m4()
+    if(inherits(m4(), "character")){
+      return(m4())
+    }
+    "Model prepared."
+  })
+
+  output$optimisation_output <- renderText({
+    result()
+    return("Model optimised!")
+  })
+
+  output$merged_output <- renderText({
+    merged_df()
+    return("Df merged.")
+  })
+
   output$download_df <- downloadHandler(
     filename = "model_output.csv",
     content = function(file) {
       write.csv(merged_df(), file, row.names=FALSE)
     }
   )
+
+
+  ## Output widgets PBA
+  output$stud_info_preview_pba <- renderDT({
+    df <- input$stud_info_pba
+    req(df)
+    stud_info_df_pba()
+    # NULL
+  }, options=list(scrollX = TRUE))
+
+
 
 }
 
