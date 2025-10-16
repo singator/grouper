@@ -1,3 +1,5 @@
+# grouper 0.5.0
+
 # grouper 0.4.0
 
 * added functionality to use custom dissimilarity matrix in DBA
