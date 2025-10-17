@@ -21,6 +21,14 @@ Please refer to the [vignettes](https://cran.r-project.org/package=grouper) for 
 
 For best performance, it is best to get a license for [Gurobi optimiser](https://www.gurobi.com/downloads/).
 
+## Using Gurobi on Linux
+
+Something to take note: Rstudio does not seem to run the .bash_profile or .bashrc scripts. It may be necessary to set the 
+environment variables explicitly in /etc/R/Renviron and /etc/R/Renviron.site
+
+Shiny servers, on the other hand, seem to read environment variables from .bash_profile, so no extra modifications to Renviron needed.
+When running on shiny servers, it is also necessary to copy the files into the app directory. It does not seem to work with the use of 
+shiny::runApp().
 
 ## Contact
 
