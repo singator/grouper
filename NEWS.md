@@ -1,5 +1,7 @@
 # grouper 0.5.0
 
+* Added shiny apps (one for dba and one for pba) to inst/shiny/ folder
+
 # grouper 0.4.0
 
 * added functionality to use custom dissimilarity matrix in DBA
