@@ -1,4 +1,6 @@
 # grouper 0.5.1
+* Added functionality to choose solver
+* Added status message to shiny app
 
 # grouper 0.5.0
 
