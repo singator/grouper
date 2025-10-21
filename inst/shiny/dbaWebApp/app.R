@@ -6,8 +6,8 @@ library(magrittr)
 library(grouper)
 library(ompr)
 library(ompr.roi)
-library(ROI.plugin.glpk)
-library(ROI.plugin.gurobi)
+#library(ROI.plugin.glpk)
+#library(ROI.plugin.gurobi)
 library(readxl)
 
 source('utils.R')
@@ -83,7 +83,8 @@ ui <- fluidPage(
     leave the one you do not wish to set as 0."),
   fluidRow(
     column(width=4, numericInput("time_limit", "Time limit (sec)", 60, min=0, step=0.1)),
-    column(width=4, numericInput("iteration_limit", "Iteration limit", 100, min=0, step=1))
+    column(width=4, numericInput("iteration_limit", "Iteration limit", 100, min=0, step=1)),
+    column(width=4, selectizeInput("solver", "Select solver", choices=c("glpk", "gurobi")))
     ),
   fluidRow( column(width=4, actionButton("optimise", "Optimise")),
             column(width=6, textOutput("optimisation_output"))
@@ -230,17 +231,24 @@ server <- function(input, output, session) {
     } else {
       it_limit = input$iteration_limit
     }
+    if(input$solver == "glpk") {
+      require(ROI.plugin.glpk)
+      solve_model(m4(), with_ROI(solver=input$solver,
+                                 verbose=TRUE))
+    } else if(input$solver == "gurobi") {
+      require(ROI.plugin.gurobi)
+      solve_model(m4(), with_ROI(solver=input$solver,
+                                 TimeLimit = time_limit,
+                                 IterationLimit = it_limit,
+                                 verbose=TRUE))
+    }
 
-    solve_model(m4(), with_ROI(solver="gurobi",
-                               TimeLimit = time_limit,
-                               IterationLimit = it_limit,
-                               verbose=TRUE))
   }) %>%
     bindEvent(input$optimise)
 
   output$optimisation_output <- renderText({
     result()
-    return("Model optimised!")
+    return(paste("Model optimised! Status: ", result()$status, ".", sep=""))
   })
 
   # Merging
