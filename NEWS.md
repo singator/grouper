@@ -1,3 +1,5 @@
+# grouper 0.5.1
+
 # grouper 0.5.0
 
 * Added shiny apps (one for dba and one for pba) to inst/shiny/ folder
