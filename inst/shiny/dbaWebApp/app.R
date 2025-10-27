@@ -179,7 +179,7 @@ server <- function(input, output, session) {
                                       self_formed_groups = grouping_col_no,
                                       demographic_cols = demo_col_no,
                                       skills = skills_col_no)
-    } else if(input$demographic_vars == "No demographics") {
+    } else if((length(input$demographic_vars) == 1) && (input$demographic_vars == "No demographics")) {
       demo_col_no <- NULL
       skills_col_no <- match(input$skill_var, df_col_names)
       df_list <- extract_student_info(stud_info_df(), assignment = "diversity",
