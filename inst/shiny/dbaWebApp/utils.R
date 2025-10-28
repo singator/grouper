@@ -17,19 +17,16 @@ verify_columns <- function(groupings, demographics, skills) {
   if(("No demographics" %in% demographics) && ("No skills" %in% skills)){
     return("At least one of demographics or skills needs to be used.")
   }
-  if("No demographics" %in% demographics){
-    if(length(demographics) > 1)
-      return("If no demographics are selected, then no other demographic columns should be selected.")
+  if(("No demographics" %in% demographics) && (length(demographics) > 1)){
+    return("If no demographics are selected, then no other demographic columns should be selected.")
   }
   return("Columns verified.")
 }
 
 verify_params <- function(demographics, skills, w1, w2) {
-  if(length(demographics) == 1){
-    if(demographics == "No demographics") {
-      if(w1 > 0 ){
-        return("Please set w1 to be 0 since no demographics are used.")
-      }
+  if((length(demographics) == 1) && (demographics == "No demographics")) {
+    if(w1 > 0 ){
+      return("Please set w1 to be 0 since no demographics are used.")
     }
   }
   if (skills == "No skills") {
