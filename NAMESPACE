@@ -2,8 +2,13 @@
 
 export("%>%")
 export(assign_groups)
+export(assign_job)
 export(extract_params_yaml)
+export(extract_phd_info)
 export(extract_student_info)
+export(prepare_diversity_model)
 export(prepare_model)
+export(prepare_phd_model)
+export(prepare_preference_model)
 importFrom(magrittr,"%>%")
 importFrom(rlang,.data)

@@ -5,4 +5,11 @@
 inst/doc
 /doc/
 /Meta/
+docs/
 .DS_Store
+
+# feature/mingyuan.
+data/phdModel
+dba_gc_ex003.Rd
+dba_gc_ex004.Rd
+docs

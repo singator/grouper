@@ -1,0 +1,508 @@
+---
+title: "PhD model testing AY 2510"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(ompr)
+library(ompr.roi)
+library(ROI.plugin.gurobi)
+library(devtools)
+library(readxl)
+library(lubridate)
+library(digest)
+library(purrr)
+```
+
+```{r}
+# Setting up
+load_all()
+exists("prepare_phd_model", where = globalenv(), inherits = FALSE)
+source("phdmodel_test_helpers.R")
+```
+
+## Loading Data
+
+```{r}
+preference_y24_raw <- read_excel(
+  "../data/phdModel/AY2510/List of research scholars and teaching preferences for Sem 1, AY202526.xlsx",
+  sheet = "List of RS ( Yr 2-4 )", skip = 2
+)
+
+preference_y1_raw <- read_excel(
+  "../data/phdModel/AY2510/List of research scholars and teaching preferences for Sem 1, AY202526.xlsx",
+  sheet = "List of RS ( Yr 1 )", skip = 2
+)
+
+manual_output_current <- read_excel("../data/phdModel/AY2510/output_005.xlsx", sheet = "Sheet3")
+past_output_2420 <- read_excel("../data/phdModel/AY2420/output_009.xlsx", sheet = "output_001a")
+```
+
+## Data cleaning
+
+```{r}
+# Date handling
+reference_date <- ymd("2025-12-01")
+
+preference_y24 <- preference_y24_raw %>%
+  filter(!is.na(`S/No.`)) %>%
+  transmute(
+    `S/No._raw` = as.integer(`S/No.`),
+    Name,
+    `Year (intake enrolled in)` = as.character(`Year (intake enrolled in)`),
+    first = clean_pref_code(`Please provide the module code which is your first tutorial preferences (with 1 being most preferred) (first choice)`),
+    second = clean_pref_code(`Please list the module code which is your second tutorial preferences (second choice)`),
+    third = clean_pref_code(`Please list the module code which is your third tutorial preferences (Third choice)`),
+    intake_month = case_when(
+      str_detect(str_to_lower(`Year (intake enrolled in)`), "jan") ~ 1L,
+      str_detect(str_to_lower(`Year (intake enrolled in)`), "aug") ~ 8L,
+      TRUE ~ NA_integer_
+    ),
+    intake_year = as.integer(str_extract(`Year (intake enrolled in)`, "\\d{4}")),
+    intake_date = ymd(paste(intake_year, intake_month, "01")),
+    source_sheet = "Yr2-4"
+  )
+
+preference_y1 <- preference_y1_raw %>%
+  filter(!is.na(`S/No.`)) %>%
+  mutate(intake_date = as.Date(`Year (intake enrolled in)`)) %>%
+  transmute(
+    `S/No._raw` = as.integer(`S/No.`),
+    Name,
+    `Year (intake enrolled in)` = as.character(intake_date),
+    first = NA_character_,
+    second = NA_character_,
+    third = NA_character_,
+    intake_month = month(intake_date),
+    intake_year = year(intake_date),
+    intake_date,
+    source_sheet = "Yr1"
+  )
+```
+
+```{r}
+# AY2510 has overlapping S/No. across Yr1 and Yr2-4 sheets.
+# Rebuild a unique student ID after combining both sheets.
+preference <- bind_rows(preference_y24, preference_y1) %>%
+  mutate(
+    year_raw = time_length(interval(intake_date, reference_date), "years"),
+    seniority = ceiling(year_raw),
+    Name = standardise_name(Name)
+  ) %>%
+  # cap seniority at 4 (treat year 5/6 as year 4)
+  mutate(seniority = pmin(seniority, 4L)) %>%
+  arrange(source_sheet, `S/No._raw`, Name) %>%
+  mutate(`S/No.` = row_number()) %>%
+  relocate(`S/No.`, .before = Name)
+
+
+# Student-id mapping
+student_id <- preference %>%
+  select(`S/No.`, Name, seniority) %>%
+  rename(ID = `S/No.`)
+```
+
+```{r}
+# Extracting demand
+demand_source <- manual_output_current %>%
+  filter(str_detect(email, "@"), !is.na(Name)) %>%
+  mutate(name_std = standardise_name(Name))
+
+demand_ta_cols <- names(demand_source)[str_detect(names(demand_source), "-t$")]
+demand_gr_cols <- names(demand_source)[str_detect(names(demand_source), "-g$")]
+
+# Demand is now derived directly from manually completed output_005.xlsx.
+# Exclude full-time TA WONG YEAN LING from the remaining allocatable demand.
+demand_allocatable <- demand_source %>%
+  filter(name_std != "WONG YEAN LING")
+
+demand_ta <- demand_allocatable %>%
+  summarise(across(all_of(demand_ta_cols), ~ sum(as.numeric(.x), na.rm = TRUE))) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "course_col",
+    values_to = "TA"
+  ) %>%
+  transmute(
+    course_code = norm_code(str_remove(course_col, "-t$")),
+    TA = replace_na(as.numeric(TA), 0)
+  )
+
+demand_gr <- demand_allocatable %>%
+  summarise(across(all_of(demand_gr_cols), ~ sum(as.numeric(.x), na.rm = TRUE))) %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "course_col",
+    values_to = "GR"
+  ) %>%
+  transmute(
+    course_code = norm_code(str_remove(course_col, "-g$")),
+    GR = replace_na(as.numeric(GR), 0)
+  )
+
+demand <- full_join(demand_ta, demand_gr, by = "course_code") %>%
+  mutate(
+    TA = replace_na(TA, 0),
+    GR = replace_na(GR, 0),
+    E = 0 # E not derived from output_005 in this workflow
+  ) %>%
+  filter(TA + GR > 0) %>%
+  arrange(course_code) %>%
+  mutate(ID = row_number()) %>%
+  relocate(ID, .before = course_code)
+```
+
+```{r}
+# parameters
+Ns <- nrow(preference)
+Nj <- nrow(demand)
+C <- 4
+```
+
+```{r}
+# calculate the number of Empty units
+total_units <- Ns * C
+total_demand <- sum(demand[["TA"]]) + sum(demand[["GR"]])
+total_E <- total_units - total_demand
+
+# Allocate E in round robin fashion from highest to lowest GR demand.
+eligible <- which(demand$GR > 0)
+
+if (total_E > 0 && length(eligible) > 0) {
+  ranked <- eligible[order(demand$GR[eligible], decreasing = TRUE)]
+  rr_idx <- ranked[((seq_len(total_E) - 1) %% length(ranked)) + 1]
+  demand$E <- tabulate(rr_idx, nbins = nrow(demand))
+}
+
+# converting to matrix
+D <- as.matrix(demand[, c("TA", "GR", "E")])
+
+# building look up course list
+courses <- norm_code(pull(demand, course_code))
+```
+**note that it is very important to ensure P[,j] and D[j,] are referring to the
+same course.**
+
+```{r}
+# preference matrix
+P <- matrix(-99L, nrow = Ns, ncol = Nj)
+
+for (i in seq_len(Ns)) {
+  first <- norm_code(preference[["first"]][i])
+  second <- norm_code(preference[["second"]][i])
+  third <- norm_code(preference[["third"]][i])
+
+  # if first choice is NA, all courses = 3
+  if (is.na(first) || first == "") {
+    P[i, ] <- 3L
+    next
+  }
+
+  if (!is.na(first) && first != "") {
+    j <- match(first, courses)
+    if (!is.na(j)) P[i, j] <- 3L
+  }
+
+  if (!is.na(second) && second != "") {
+    j <- match(second, courses)
+    if (!is.na(j)) P[i, j] <- 2L
+  }
+
+  if (!is.na(third) && third != "") {
+    j <- match(third, courses)
+    if (!is.na(j)) P[i, j] <- 1L
+  }
+}
+```
+
+```{r}
+# Extracting previous semester workload
+past_ta_cols <- names(past_output_2420)[str_detect(names(past_output_2420), "-t$")]
+past_gr_cols <- names(past_output_2420)[str_detect(names(past_output_2420), "-g$")]
+
+# Past workload is now derived from AY2420 output_009.xlsx.
+past_summary <- past_output_2420 %>%
+  filter(!is.na(Name), Name != "") %>%
+  mutate(
+    Name = standardise_name(Name),
+    TA = rowSums(across(all_of(past_ta_cols)), na.rm = TRUE),
+    GR = rowSums(across(all_of(past_gr_cols)), na.rm = TRUE)
+  ) %>%
+  group_by(Name) %>%
+  summarise(
+    TA = sum(TA),
+    GR = sum(GR),
+    .groups = "drop"
+  )
+```
+
+```{r}
+# AY2420-only students are not included in this workflow.
+# AY2510 students with no past rows default to zero before final padding.
+past_clean <- student_id %>%
+  left_join(past_summary, by = "Name") %>%
+  mutate(
+    TA = replace_na(TA, 0),
+    GR = replace_na(GR, 0)
+  ) %>%
+  arrange(ID)
+
+
+# check if every one has exactly C units in total. If less than C, pad with GR.
+past_final <- past_clean %>%
+  mutate(
+    total = TA + GR,
+    pad_GR = pmax(0, C - total),
+    GR = GR + pad_GR
+  ) %>%
+  select(ID, Name, TA, GR) %>%
+  arrange(ID)
+```
+
+Note: during actual package implementation, ensure every student exists in past
+table (even if they had no past assignments). remove those not in current
+allocation.
+
+```{r}
+# Extracting seniority
+s <- pull(preference, seniority) - 2 # offset
+```
+
+```{r}
+# Input prep
+t1 <- pull(past_final, TA)
+g1 <- pull(past_final, GR)
+
+# final input to model
+df_list = list(
+  Ns = Ns,
+  Nj = Nj,
+  P = P,
+  d = D,
+  s = s,
+  t1 = t1,
+  g1 = g1
+)
+```
+
+## Modelling
+```{r}
+# initialisation
+model_0 <- prepare_phd_model(df_list, e_max = 2, C = C)
+
+result_0 <- solve_model(model_0, with_ROI(solver = "gurobi"))
+
+alloc_df_0 <- extract_phd_assignment(
+  model_result = result_0,
+  student_df = preference
+)
+
+plot_phd_year_distribution(
+  alloc_df_0,
+  t1 = df_list$t1, g1 = df_list$g1,
+  facet_by_seniority = TRUE, seniority_col = "seniority"
+)
+```
+
+```{r}
+get_solution(result_0, Tmax); get_solution(result_0, Tmin)
+```
+
+```{r}
+# Preference fulfilment
+ta_detail <- extract_phd_ta_detail(result_0, preference)
+```
+
+## Retrieving top-k result
+https://docs.gurobi.com/projects/optimizer/en/current/features/solutionpool.html
+```{r}
+# build solution pool
+result_pool <- solve_model(
+  model_0,
+  with_ROI(
+    solver = "gurobi",
+    PoolSearchMode = 2,
+    PoolSolutions = 50,
+    verbose = TRUE
+  )
+)
+```
+```{r}
+pool_results <- extract_phd_pool_results(
+  result_pool = result_pool,
+  preference = preference,
+  k = 50
+)
+```
+
+```{r}
+pool_results[[2]]$phd_assignment
+```
+
+```{r}
+pool_results[[2]]$ta_detail
+```
+
+```{r}
+# top 3 unique
+n_plot <- 3
+
+for (i in seq_len(n_plot)) {
+  cur <- pool_results[[i]]
+
+  p <- plot_phd_year_distribution(
+    current_alloc_df = cur$phd_assignment,
+    t1 = df_list$t1,
+    g1 = df_list$g1,
+    facet_by_seniority = TRUE,
+    seniority_col = "seniority",
+    facet_ncol = 4
+  ) +
+    ggplot2::labs(
+      subtitle = paste0(
+        "rank=", i,
+        " | obj=", round(cur$objective_value, 4),
+        " | TA min=", round(cur$ta_min, 4),
+        " | TA max=", round(cur$ta_max, 4)
+      )
+    )
+
+  print(p)
+}
+```
+
+## Objective Comparison with manual output
+
+```{r}
+manual_output <- demand_source
+
+pref_lookup <- preference %>%
+  transmute(
+    i = row_number(),
+    student_id = `S/No.`,
+    student_name = Name,
+    name_std = standardise_name(Name)
+  )
+
+ta_cols <- demand_ta_cols
+gr_cols <- demand_gr_cols
+
+manual_alloc <- pref_lookup %>%
+  left_join(
+    manual_output %>%
+      transmute(
+        name_std,
+        manual_TA = rowSums(across(all_of(ta_cols)), na.rm = TRUE),
+        manual_GR = rowSums(across(all_of(gr_cols)), na.rm = TRUE)
+      ) %>%
+      distinct(name_std, .keep_all = TRUE),
+    by = "name_std"
+  ) %>%
+  transmute(
+    student_id,
+    student_name,
+    manual_TA = replace_na(as.numeric(manual_TA), 0),
+    manual_GR = replace_na(as.numeric(manual_GR), 0),
+    manual_E = pmax(0, 4 - manual_TA - manual_GR)
+  )
+```
+
+```{r}
+# Must match the settings used in prepare_phd_model above.
+obj_cfg <- list(alpha = 2, beta = 1, phi = 1, rho = 10, t_max_y1 = 1)
+```
+
+```{r}
+# Solver objective for the model solution.
+model_solver_obj <- as.numeric(result_0$objective_value)
+if (length(model_solver_obj) == 0 || is.na(model_solver_obj[[1]])) {
+  model_solver_obj <- as.numeric(result_0$additional_solver_output$ROI$message$objval)
+}
+model_solver_obj <- model_solver_obj[[1]]
+```
+
+```{r}
+# Recalculate manual objective using manual TA by course + derived E.
+manual_ta_detail <- manual_output %>%
+  inner_join(pref_lookup, by = "name_std") %>%
+  select(i, student_id, student_name, matches("-t$")) %>%
+  pivot_longer(
+    cols = matches("-t$"),
+    names_to = "course_col",
+    values_to = "ta_units"
+  ) %>%
+  mutate(
+    ta_units = replace_na(as.numeric(ta_units), 0),
+    course_code = norm_code(str_remove(course_col, "-t$")),
+    j = match(course_code, courses)
+  ) %>%
+  filter(ta_units > 1e-8)
+
+manual_ta_pref_sum <- manual_ta_detail %>%
+  filter(!is.na(j)) %>%
+  mutate(pref_score = P[cbind(i, j)]) %>%
+  summarise(val = sum(pref_score * ta_units, na.rm = TRUE)) %>%
+  pull(val)
+
+manual_totals_by_i <- pref_lookup %>%
+  select(i, student_id, student_name) %>%
+  left_join(manual_alloc, by = c("student_id", "student_name")) %>%
+  mutate(
+    manual_TA = replace_na(as.numeric(manual_TA), 0),
+    manual_E = replace_na(as.numeric(manual_E), 0)
+  ) %>%
+  arrange(i)
+```
+
+```{r}
+manual_obj_breakdown <- compute_obj_from_components(
+  ta_by_student = manual_totals_by_i$manual_TA,
+  e_by_student = manual_totals_by_i$manual_E,
+  ta_pref_sum = manual_ta_pref_sum,
+  t1 = t1,
+  s = s,
+  t_max_y1 = obj_cfg$t_max_y1,
+  alpha = obj_cfg$alpha,
+  beta = obj_cfg$beta,
+  phi = obj_cfg$phi,
+  rho = obj_cfg$rho
+)
+
+manual_obj_breakdown
+```
+
+```{r}
+model_solver_obj
+```
+
+## Manual-Style Solver Output
+
+```{r}
+job_output <- assign_job(
+  model_result = result_0,
+  student_df = preference,
+  course_codes = courses,
+  name_col = "Name"
+)
+
+job_output
+```
+
+```{r}
+# check per-student TA / GR sessions from job_output
+ta_cols_job <- names(job_output)[str_detect(names(job_output), "-t$")]
+gr_cols_job <- names(job_output)[str_detect(names(job_output), "-g$")]
+e_cols_job <- names(job_output)[str_detect(names(job_output), "-e$")]
+
+job_output_summary <- job_output %>%
+  transmute(
+    Name,
+    TA_sessions = rowSums(across(all_of(ta_cols_job)), na.rm = TRUE),
+    GR_sessions = rowSums(across(all_of(gr_cols_job)), na.rm = TRUE),
+    E_sessions = rowSums(across(all_of(e_cols_job)), na.rm = TRUE)
+  ) %>%
+  arrange(Name)
+
+job_output_summary
+```

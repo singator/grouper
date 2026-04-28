@@ -1,11 +1,9 @@
-
 # grouper
 
 <!-- badges: start -->
 <!-- badges: end -->
 
-The goal of grouper is to make it easier for an instructor to divide students
-into groups.
+The goal of grouper is to make it easier for an instructor to do student or workload allocations.
 
 ## Installation
 
@@ -16,7 +14,7 @@ You can install the development version of grouper from [GitHub](https://github.
 pak::pak("singator/grouper")
 ```
 
-But to be honest, the package on CRAN is already the most updated on. 
+But to be honest, the package on CRAN is already the most up to date.
 Please refer to the [vignettes](https://cran.r-project.org/package=grouper) for examples and documentation on the models in the package.
 
 For best performance, it is best to get a license for [Gurobi optimiser](https://www.gurobi.com/downloads/).
@@ -32,5 +30,5 @@ shiny::runApp().
 
 ## Contact
 
-For more details, please contact Vik Gopal <vik.gopal@nus.edu.sg> or 
-Kevin Lam <lamfy@u.nus.edu>.
+For more details, please contact Vik Gopal <vik.gopal@nus.edu.sg>, 
+Kevin Lam <lamfy@u.nus.edu> or Mingyuan Zhang <mingyuan.z@nus.edu.sg>

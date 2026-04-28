@@ -1,0 +1,474 @@
+---
+title: "Course Popularity Overview (AY2420-AY2520)"
+format: html
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+## Setup
+
+```{r}
+# Core packages and shared cleaning helpers used by existing AY notebooks.
+library(tidyverse)
+library(readxl)
+library(lubridate)
+source("phdmodel_test_helpers.R")
+
+sem_levels <- c("AY2420", "AY2510", "AY2520")
+data_dir <- "../data/phdModel"
+```
+
+## Build Semester Inputs
+
+```{r}
+# Expand to one first-choice event per student.
+# NIL/NA/no-entry are kept as a single "UNRANKED" category.
+canonical_course <- function(code) {
+  code <- norm_code(code)
+  if_else(str_detect(code, "/"), str_extract(code, "^[^/]+"), code)
+}
+
+build_first_choice_events <- function(preference, courses, semester, match_fun = NULL) {
+  map_course <- function(code) {
+    if (is.null(match_fun)) match(code, courses) else match_fun(code, courses)
+  }
+  no_pref_tokens <- c("", "NIL", "NA", "-")
+
+  purrr::map_dfr(seq_len(nrow(preference)), function(i) {
+    first <- norm_code(preference$first[i])
+    sid <- as.integer(preference$`S/No.`[i])
+    yr <- as.integer(preference$seniority[i])
+    first <- if (is.na(first) || first %in% no_pref_tokens) NA_character_ else first
+
+    if (is.na(first)) {
+      tibble(
+        semester = semester,
+        student_id = sid,
+        seniority = yr,
+        course_code = "UNRANKED",
+        first_choice_flag = 1L
+      )
+    } else {
+      j <- map_course(first)
+      if (is.na(j)) {
+        tibble(
+          semester = semester,
+          student_id = sid,
+          seniority = yr,
+          course_code = "UNRANKED",
+          first_choice_flag = 1L
+        )
+      } else {
+        tibble(
+          semester = semester,
+          student_id = sid,
+          seniority = yr,
+          course_code = canonical_course(courses[j]),
+          first_choice_flag = 1L
+        )
+      }
+    }
+  })
+}
+
+prepare_ay2420 <- function() {
+  reference_date <- ymd("2025-05-01")
+
+  preference_y24_raw <- read_excel(
+    file.path(data_dir, "AY2420", "List of research scholars and teaching preferences for Sem 2 AY2425.xlsx"),
+    sheet = "List of RS ( Yr 2-4 )",
+    skip = 2,
+    range = "B4:O37"
+  )
+  preference_y1_raw <- read_excel(
+    file.path(data_dir, "AY2420", "List of research scholars and teaching preferences for Sem 2 AY2425.xlsx"),
+    sheet = "List of RS ( Yr 1 )",
+    skip = 2
+  )
+  demand_raw <- read_excel(
+    file.path(data_dir, "AY2420", "2425_Sem2_tutor_grader_request_working.xlsx"),
+    sheet = 1
+  )
+
+  preference_y24 <- preference_y24_raw %>%
+    filter(!is.na(`S/No.`)) %>%
+    transmute(
+      `S/No._raw` = as.integer(`S/No.`),
+      Name,
+      `Year (intake enrolled in)` = as.character(`Year (intake enrolled in)`),
+      first = clean_pref_code(`Please provide the module code which is your first tutorial preferences (with 1 being most preferred) (first choice)`),
+      second = clean_pref_code(`Please list the module code which is your second tutorial preferences (second choice)`),
+      third = clean_pref_code(`Please list the module code which is your third tutorial preferences (Third choice)`),
+      intake_month = case_when(
+        str_detect(str_to_lower(`Year (intake enrolled in)`), "jan") ~ 1L,
+        str_detect(str_to_lower(`Year (intake enrolled in)`), "aug") ~ 8L,
+        TRUE ~ NA_integer_
+      ),
+      intake_year = as.integer(str_extract(`Year (intake enrolled in)`, "\\d{4}")),
+      intake_date = ymd(paste(intake_year, intake_month, "01")),
+      source_sheet = "Yr2-4"
+    )
+
+  preference_y1 <- preference_y1_raw %>%
+    filter(!is.na(`S/No.`)) %>%
+    mutate(
+      intake_date = as.Date(`Year (intake enrolled in)`),
+      intake_date = coalesce(intake_date, ymd("2024-08-01"))
+    ) %>%
+    transmute(
+      `S/No._raw` = as.integer(`S/No.`),
+      Name,
+      `Year (intake enrolled in)` = as.character(intake_date),
+      first = NA_character_,
+      second = NA_character_,
+      third = NA_character_,
+      intake_month = month(intake_date),
+      intake_year = year(intake_date),
+      intake_date,
+      source_sheet = "Yr1"
+    )
+
+  preference <- bind_rows(preference_y24, preference_y1) %>%
+    mutate(
+      year_raw = time_length(interval(intake_date, reference_date), "years"),
+      seniority = pmin(ceiling(year_raw), 4L),
+      Name = standardise_name(Name)
+    ) %>%
+    arrange(source_sheet, `S/No._raw`, Name) %>%
+    mutate(`S/No.` = row_number()) %>%
+    relocate(`S/No.`, .before = Name)
+
+  demand_cols <- tail(names(demand_raw), 2)
+  demand <- demand_raw %>%
+    transmute(
+      course_code = norm_code(`Course Code`),
+      TA = suppressWarnings(as.numeric(.data[[demand_cols[1]]])),
+      GR = suppressWarnings(as.numeric(.data[[demand_cols[2]]])) / 11
+    ) %>%
+    mutate(TA = replace_na(TA, 0), GR = replace_na(GR, 0), E = 0) %>%
+    filter(!is.na(course_code), course_code != "", TA + GR > 0) %>%
+    arrange(course_code) %>%
+    mutate(ID = row_number()) %>%
+    relocate(ID, .before = course_code)
+
+  # Keep the same AY2420 demand adjustments used in current testing workflow.
+  demand$TA[7] <- demand$TA[7] - 5
+  demand$TA[10] <- demand$TA[10] - 7
+  demand$TA[5] <- demand$TA[5] - 11
+
+  courses <- norm_code(pull(demand, course_code))
+
+  match_course <- function(code, courses) {
+    code <- norm_code(code)
+    j <- match(code, courses)
+    if (!is.na(j)) return(j)
+    starts <- which(str_starts(courses, paste0(code, "/")))
+    if (length(starts) == 1) return(starts[[1]])
+    NA_integer_
+  }
+
+  list(preference = preference, courses = courses, match_fun = match_course)
+}
+
+prepare_ay2510 <- function() {
+  reference_date <- ymd("2025-12-01")
+
+  preference_y24_raw <- read_excel(
+    file.path(data_dir, "AY2510", "List of research scholars and teaching preferences for Sem 1, AY202526.xlsx"),
+    sheet = "List of RS ( Yr 2-4 )",
+    skip = 2
+  )
+  preference_y1_raw <- read_excel(
+    file.path(data_dir, "AY2510", "List of research scholars and teaching preferences for Sem 1, AY202526.xlsx"),
+    sheet = "List of RS ( Yr 1 )",
+    skip = 2
+  )
+  manual_output_current <- read_excel(file.path(data_dir, "AY2510", "output_005.xlsx"), sheet = "Sheet3")
+
+  preference_y24 <- preference_y24_raw %>%
+    filter(!is.na(`S/No.`)) %>%
+    transmute(
+      `S/No._raw` = as.integer(`S/No.`),
+      Name,
+      `Year (intake enrolled in)` = as.character(`Year (intake enrolled in)`),
+      first = clean_pref_code(`Please provide the module code which is your first tutorial preferences (with 1 being most preferred) (first choice)`),
+      second = clean_pref_code(`Please list the module code which is your second tutorial preferences (second choice)`),
+      third = clean_pref_code(`Please list the module code which is your third tutorial preferences (Third choice)`),
+      intake_month = case_when(
+        str_detect(str_to_lower(`Year (intake enrolled in)`), "jan") ~ 1L,
+        str_detect(str_to_lower(`Year (intake enrolled in)`), "aug") ~ 8L,
+        TRUE ~ NA_integer_
+      ),
+      intake_year = as.integer(str_extract(`Year (intake enrolled in)`, "\\d{4}")),
+      intake_date = ymd(paste(intake_year, intake_month, "01")),
+      source_sheet = "Yr2-4"
+    )
+
+  preference_y1 <- preference_y1_raw %>%
+    filter(!is.na(`S/No.`)) %>%
+    mutate(intake_date = as.Date(`Year (intake enrolled in)`)) %>%
+    transmute(
+      `S/No._raw` = as.integer(`S/No.`),
+      Name,
+      `Year (intake enrolled in)` = as.character(intake_date),
+      first = NA_character_,
+      second = NA_character_,
+      third = NA_character_,
+      intake_month = month(intake_date),
+      intake_year = year(intake_date),
+      intake_date,
+      source_sheet = "Yr1"
+    )
+
+  preference <- bind_rows(preference_y24, preference_y1) %>%
+    mutate(
+      year_raw = time_length(interval(intake_date, reference_date), "years"),
+      seniority = pmin(ceiling(year_raw), 4L),
+      Name = standardise_name(Name)
+    ) %>%
+    arrange(source_sheet, `S/No._raw`, Name) %>%
+    mutate(`S/No.` = row_number()) %>%
+    relocate(`S/No.`, .before = Name)
+
+  demand_source <- manual_output_current %>%
+    filter(str_detect(email, "@"), !is.na(Name)) %>%
+    mutate(name_std = standardise_name(Name))
+
+  demand_ta_cols <- names(demand_source)[str_detect(names(demand_source), "-t$")]
+  demand_gr_cols <- names(demand_source)[str_detect(names(demand_source), "-g$")]
+
+  demand_allocatable <- demand_source %>% filter(name_std != "WONG YEAN LING")
+
+  demand_ta <- demand_allocatable %>%
+    summarise(across(all_of(demand_ta_cols), ~ sum(as.numeric(.x), na.rm = TRUE))) %>%
+    pivot_longer(cols = everything(), names_to = "course_col", values_to = "TA") %>%
+    transmute(course_code = norm_code(str_remove(course_col, "-t$")), TA = replace_na(as.numeric(TA), 0))
+
+  demand_gr <- demand_allocatable %>%
+    summarise(across(all_of(demand_gr_cols), ~ sum(as.numeric(.x), na.rm = TRUE))) %>%
+    pivot_longer(cols = everything(), names_to = "course_col", values_to = "GR") %>%
+    transmute(course_code = norm_code(str_remove(course_col, "-g$")), GR = replace_na(as.numeric(GR), 0))
+
+  demand <- full_join(demand_ta, demand_gr, by = "course_code") %>%
+    mutate(TA = replace_na(TA, 0), GR = replace_na(GR, 0), E = 0) %>%
+    filter(TA + GR > 0) %>%
+    arrange(course_code)
+
+  courses <- norm_code(pull(demand, course_code))
+
+  list(preference = preference, courses = courses, match_fun = NULL)
+}
+
+prepare_ay2520 <- function() {
+  reference_date <- ymd("2026-05-01")
+
+  preference <- read_excel(file.path(data_dir, "AY2520", "preference.xlsx"), range = "B4:O44")
+  demand <- read_excel(file.path(data_dir, "AY2520", "demand.xlsx"))
+
+  preference <- preference %>%
+    mutate(
+      intake_month = case_when(
+        str_detect(`Year (intake enrolled in)`, "Jan") ~ 1,
+        str_detect(`Year (intake enrolled in)`, "Aug") ~ 8,
+        TRUE ~ NA_real_
+      ),
+      intake_year = as.integer(str_extract(`Year (intake enrolled in)`, "\\d{4}")),
+      intake_date = ymd(paste(intake_year, intake_month, "01")),
+      year_raw = time_length(interval(intake_date, reference_date), "years"),
+      seniority = ceiling(year_raw),
+      Name = standardise_name(Name)
+    ) %>%
+    rename(first = 9, second = 10, third = 11) %>%
+    mutate(
+      first = clean_pref_code(first),
+      second = clean_pref_code(second),
+      third = clean_pref_code(third)
+    ) %>%
+    arrange(`S/No.`)
+
+  demand <- demand %>%
+    rename(TA = ta_hours, GR = grading_hours) %>%
+    mutate(E = numeric(n())) %>%
+    arrange(ID)
+
+  demand$TA[norm_code(demand$course_code) == "ST2334"] <- demand$TA[norm_code(demand$course_code) == "ST2334"] - 8
+  demand$TA[norm_code(demand$course_code) == "ST1131"] <- demand$TA[norm_code(demand$course_code) == "ST1131"] - 5
+
+  courses <- norm_code(pull(demand, course_code))
+
+  list(preference = preference, courses = courses, match_fun = NULL)
+}
+```
+
+## First-Choice Table
+
+```{r}
+# Build student-level first-choice events for each semester.
+ay2420 <- prepare_ay2420()
+ay2510 <- prepare_ay2510()
+ay2520 <- prepare_ay2520()
+
+first_choice_tbl <- bind_rows(
+  build_first_choice_events(ay2420$preference, ay2420$courses, "AY2420", ay2420$match_fun),
+  build_first_choice_events(ay2510$preference, ay2510$courses, "AY2510", ay2510$match_fun),
+  build_first_choice_events(ay2520$preference, ay2520$courses, "AY2520", ay2520$match_fun)
+) %>%
+  mutate(semester = factor(semester, levels = sem_levels))
+
+course_pop <- first_choice_tbl %>%
+  count(semester, course_code, wt = first_choice_flag, name = "n_first")
+
+year_pop <- first_choice_tbl %>%
+  count(semester, seniority, course_code, wt = first_choice_flag, name = "n_first")
+
+course_pop_rankable <- course_pop %>%
+  filter(course_code != "UNRANKED")
+
+all_courses_tbl <- bind_rows(
+  tibble(semester = "AY2420", course_code = canonical_course(ay2420$courses)),
+  tibble(semester = "AY2510", course_code = canonical_course(ay2510$courses)),
+  tibble(semester = "AY2520", course_code = canonical_course(ay2520$courses))
+) %>%
+  distinct() %>%
+  mutate(semester = factor(semester, levels = sem_levels))
+
+course_pop_full <- all_courses_tbl %>%
+  left_join(course_pop_rankable, by = c("semester", "course_code")) %>%
+  mutate(n_first = replace_na(n_first, 0L))
+```
+
+## 1) Most Popular Courses
+
+```{r}
+# Use a fixed top-5 per semester for a consistent panel layout.
+n_top <- 5L
+tie_priority <- c("ST2131")
+top_k <- course_pop_rankable %>%
+  group_by(semester) %>%
+  mutate(priority = if_else(course_code %in% tie_priority, 0L, 1L)) %>%
+  arrange(desc(n_first), priority, course_code, .by_group = TRUE) %>%
+  slice_head(n = n_top) %>%
+  ungroup() %>%
+  select(-priority) %>%
+  mutate(course_sem = paste(semester, course_code, sep = "___")) %>%
+  group_by(semester) %>%
+  arrange(n_first, .by_group = TRUE) %>%
+  mutate(course_sem = factor(course_sem, levels = course_sem)) %>%
+  ungroup()
+
+p_top10 <- ggplot(top_k, aes(y = course_sem, x = n_first, fill = semester)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~semester, scales = "free_y") +
+  scale_y_discrete(labels = function(x) sub("^.*___", "", x)) +
+  scale_x_continuous(
+    limits = c(0, max(top_k$n_first, na.rm = TRUE)),
+    breaks = scales::pretty_breaks(n = 5)
+  ) +
+  labs(x = "Student count", y = NULL) +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+
+p_top10
+```
+
+```{r}
+# Sanity check: one vote per student, with UNRANKED tracked separately.
+vote_check <- first_choice_tbl %>%
+  count(semester, name = "total_votes") %>%
+  left_join(
+    bind_rows(
+      ay2420$preference %>% summarise(semester = "AY2420", students = n()),
+      ay2510$preference %>% summarise(semester = "AY2510", students = n()),
+      ay2520$preference %>% summarise(semester = "AY2520", students = n())
+    ),
+    by = "semester"
+  ) %>%
+  left_join(
+    course_pop %>%
+      filter(course_code == "UNRANKED") %>%
+      transmute(semester, unranked_students = n_first),
+    by = "semester"
+  ) %>%
+  mutate(unranked_students = replace_na(unranked_students, 0))
+
+vote_check
+```
+
+```{r}
+# Brief interpretation: top ranked course per semester.
+course_pop_rankable %>%
+  group_by(semester) %>%
+  arrange(desc(n_first), course_code, .by_group = TRUE) %>%
+  slice_head(n = 1) %>%
+  ungroup()
+```
+
+## 2) Popularity Consistency Across Years
+
+```{r}
+# Track popularity rank trajectory for selected core courses only.
+track_courses <- c("ST2334", "ST3131", "ST2132")
+
+rank_tbl <- course_pop_full %>%
+  group_by(semester) %>%
+  arrange(desc(n_first), course_code, .by_group = TRUE) %>%
+  mutate(rank = row_number()) %>%
+  ungroup()
+
+rank_trend <- tidyr::crossing(
+  semester = factor(sem_levels, levels = sem_levels),
+  course_code = track_courses
+) %>%
+  left_join(
+    rank_tbl %>% select(semester, course_code, rank),
+    by = c("semester", "course_code")
+  ) %>%
+  mutate(course_code = factor(course_code, levels = track_courses)) %>%
+  mutate(semester = factor(semester, levels = sem_levels))
+
+p_rank <- ggplot(rank_trend, aes(x = semester, y = rank, color = course_code, group = course_code)) +
+  geom_line(linewidth = 0.8) +
+  geom_point(size = 2) +
+  scale_y_reverse() +
+  labs(x = NULL, y = "Popularity rank (1 = most popular)", color = "Course") +
+  theme_minimal(base_size = 11) +
+  theme(panel.grid.minor = element_blank())
+
+p_rank
+```
+
+```{r}
+# Export figures used in thesis.
+thesis_fig_dir <- file.path("..", "..", "LATEX", "thesis", "figures")
+dir.create(thesis_fig_dir, recursive = TRUE, showWarnings = FALSE)
+
+ggsave(
+  filename = file.path(thesis_fig_dir, "course_popularity_top10.pdf"),
+  plot = p_top10,
+  width = 9.0,
+  height = 4.2
+)
+
+ggsave(
+  filename = file.path(thesis_fig_dir, "course_popularity_rank_trend.pdf"),
+  plot = p_rank,
+  width = 8.6,
+  height = 4.2
+)
+```
+
+```{r}
+# Rank change summary for the tracked courses.
+rank_trend %>%
+  group_by(course_code) %>%
+  summarise(
+    observed_ay = sum(!is.na(rank)),
+    min_rank = min(rank, na.rm = TRUE),
+    max_rank = max(rank, na.rm = TRUE),
+    rank_range = max_rank - min_rank,
+    .groups = "drop"
+  ) %>%
+  arrange(rank_range, min_rank)
+```

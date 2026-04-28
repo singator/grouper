@@ -65,3 +65,71 @@ assign_groups <- function(model_result,
     stop("assignment argument should be either 'diversity' or 'preference'.")
   }
 }
+
+
+#' Convert PhD solver allocation to manual-style wide table
+#'
+#' Creates one row per student and one column per course-role pair, with units
+#' allocated by the solver.
+#'
+#' @param model_result Result object from `ompr::solve_model()` for the PhD model.
+#' @param student_df A data frame that contains student name information. Every
+#'   row is a unique student.
+#' @param course_codes Character vector of course codes in the same order as
+#'   `p_mat` columns (and `d_mat` rows).
+#' @param name_col Student name column name in `student_df`.
+#'
+#' @returns A data frame with columns:
+#'   `Name`, then all `<course>-t`, all `<course>-g`, all `<course>-e`.
+#'
+#' @export
+assign_job <- function(model_result,
+                       student_df,
+                       course_codes,
+                       name_col = "Name") {
+  if (!name_col %in% names(student_df)) {
+    stop("name_col not found in student_df.")
+  }
+
+  Ns <- nrow(student_df)
+  course_codes <- as.character(course_codes)
+  Nj <- length(course_codes)
+
+  alloc <- ompr::get_solution(model_result, X[i, j, r])
+  alloc <- alloc[alloc$value > 1e-8, c("i", "j", "r", "value"), drop = FALSE]
+
+  ta_mat <- matrix(0, nrow = Ns, ncol = Nj)
+  gr_mat <- matrix(0, nrow = Ns, ncol = Nj)
+  e_mat  <- matrix(0, nrow = Ns, ncol = Nj)
+
+  if (nrow(alloc) > 0) {
+    for (k in seq_len(nrow(alloc))) {
+      i <- alloc$i[k]
+      j <- alloc$j[k]
+      r <- alloc$r[k]
+      v <- alloc$value[k]
+
+      if (r == 1) ta_mat[i, j] <- ta_mat[i, j] + v
+      if (r == 2) gr_mat[i, j] <- gr_mat[i, j] + v
+      if (r == 3) e_mat[i, j]  <- e_mat[i, j] + v
+    }
+  }
+
+  ta_df <- as.data.frame(matrix(as.integer(round(ta_mat)), nrow = Ns, ncol = Nj))
+  gr_df <- as.data.frame(matrix(as.integer(round(gr_mat)), nrow = Ns, ncol = Nj))
+  e_df  <- as.data.frame(matrix(as.integer(round(e_mat)),  nrow = Ns, ncol = Nj))
+
+  names(ta_df) <- paste0(course_codes, "-t")
+  names(gr_df) <- paste0(course_codes, "-g")
+  names(e_df)  <- paste0(course_codes, "-e")
+
+  out <- cbind(
+    data.frame(Name = student_df[[name_col]], stringsAsFactors = FALSE),
+    ta_df,
+    gr_df,
+    e_df
+  )
+
+  rownames(out) <- NULL
+  out
+}

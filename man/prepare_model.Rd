@@ -2,32 +2,36 @@
 % Please edit documentation in R/model_prep.R
 \name{prepare_model}
 \alias{prepare_model}
-\title{Initialise optimisation model}
+\title{Initialise optimisation model (wrapper)}
 \usage{
 prepare_model(
   df_list,
-  yaml_list,
-  assignment = c("diversity", "preference"),
+  yaml_list = NULL,
+  assignment = c("diversity", "preference", "phd"),
   w1 = 0.5,
-  w2 = 0.5
+  w2 = 0.5,
+  ...
 )
 }
 \arguments{
-\item{df_list}{The output list from extract_student_info().}
+\item{df_list}{Model input list.}
 
-\item{yaml_list}{The output list from extract_params_yaml().}
+\item{yaml_list}{Parameter list from \code{\link[=extract_params_yaml]{extract_params_yaml()}}. Required for
+\code{assignment = "diversity"} and \code{assignment = "preference"}. Ignored for
+\code{assignment = "phd"}.}
 
-\item{assignment}{Character string indicating the type of model that this
-dataset is for. The argument is either 'preference' or 'diversity'. Partial
-matching is fine.}
+\item{assignment}{Character string indicating model type. Must be one of
+\code{"diversity"}, \code{"preference"}, or \code{"phd"}.}
 
-\item{w1, w2}{Numeric values between 0 and 1. Should sum to 1. These weights
-correspond to the importance given to the diversity- and skill-based
-portions in the objective function.}
+\item{w1, w2}{Numeric values between 0 and 1. Should sum to 1. Used only for
+\code{assignment = "diversity"}.}
+
+\item{...}{Additional arguments passed to \code{\link[=prepare_phd_model]{prepare_phd_model()}} when
+\code{assignment = "phd"}.}
 }
 \value{
 An ompr model.
 }
 \description{
-Initialise optimisation model
+Initialise optimisation model (wrapper)
 }

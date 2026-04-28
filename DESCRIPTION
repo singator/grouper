@@ -6,19 +6,23 @@ Authors@R: c(
     person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = c("aut", "cre")),
     person("Kevin", "Lam", , "lamfy@nus.edu.sg", role = "aut"),
     person("Ju", "Xue", , "rigi.jx@gmail.com", role = "ctb"),
+    person("Mingyuan", "Zhang", , "mingyuan.z@nus.edu.sg", role = c("aut", "cre")),
     person("National University of Singapore", role = "cph")
   )
 Description: Integer programming models to assign students to groups by maximising 
     diversity within groups, or by maximising preference scores for topics. 
 License: MIT + file LICENSE
+URL: https://Zimmy313.github.io/grouper/, https://github.com/Zimmy313/grouper
+BugReports: https://github.com/Zimmy313/grouper/issues
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.3
 Suggests: 
     knitr,
     ompr.roi,
+    pkgdown,
     rmarkdown,
-    ROI.plugin.glpk,
+    ROI.plugin.glpk
 VignetteBuilder: knitr
 Imports: 
     cluster,

@@ -1,0 +1,51 @@
+url: https://Zimmy313.github.io/grouper/
+template:
+  bootstrap: 5
+  bootswatch: flatly
+
+home:
+  title: grouper
+  description: Optimal assignment of students to groups
+
+navbar:
+  structure:
+    left: [intro, reference, articles, news]
+    right: [search, github]
+  components:
+    intro:
+      text: Home
+      href: index.html
+    github:
+      icon: fa-github
+      aria-label: GitHub repository
+      href: https://github.com/Zimmy313/grouper
+
+reference:
+- title: Data preparation
+  contents:
+  - prepare_diversity_model
+  - prepare_model
+  - prepare_phd_model
+  - prepare_preference_model
+  - extract_params_yaml
+  - extract_student_info
+  - extract_phd_info
+- title: Optimization
+  contents:
+  - assign_groups
+  - assign_job
+- title: Included data
+  contents:
+  - starts_with("dba_")
+  - starts_with("pba_")
+  - starts_with("phd_")
+
+articles:
+- title: Vignettes
+  navbar: Vignettes
+  contents:
+  - a-related-work
+  - b-diversity-skill
+  - c-subgroups-preference
+  - e-phd-workload
+  - d-sanity-checks
