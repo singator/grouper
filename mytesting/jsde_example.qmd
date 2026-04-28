@@ -1,0 +1,39 @@
+---
+title: "JSDE demo"
+format: html
+---
+
+```{r}
+library(grouper)
+library(ompr)
+library(ompr.roi)
+library(ROI.plugin.gurobi)
+```
+
+```{r}
+s_id <- 1:11
+g_id <- c(1, 1, 2, 2, 3, 4, 4, 4, 5, 6, 7)
+group_comp_jsde <- data.frame(id = s_id, g_id = g_id)
+pref_mat <- matrix(c(4,3,2,1, 
+                     1,3,4,2,
+                     1,2,3,4,
+                     2,4,3,1,
+                     4,1,2,3,
+                     1,3,4,2,
+                     3,2,1,4), byrow = TRUE, nrow=7, ncol=4)
+```
+
+```{r}
+df_list <- extract_student_info(group_comp_jsde, "preference",  
+                                self_formed_groups = 2,  
+                                pref_mat = pref_mat)
+yaml_list <- extract_params_yaml("jsde_input.yml", "preference")
+mdl_jsde <- prepare_model(df_list, yaml_list, "preference")
+result <- solve_model(mdl_jsde, with_ROI(solver="gurobi", verbose=TRUE))
+groupr_assigned_df1 <- assign_groups(result, assignment = "preference",  
+                                     dframe=group_comp_jsde, yaml_list, 
+                                     group_names="g_id")
+```
+
+
+
