@@ -3,7 +3,7 @@ Type: Package
 Title: Optimal Assignment of Students to Groups
 Version: 0.5.1
 Authors@R: c(
-    person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = c("aut", "cre")),
+    person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = "aut"),
     person("Kevin", "Lam", , "lamfy@nus.edu.sg", role = "aut"),
     person("Ju", "Xue", , "rigi.jx@gmail.com", role = "ctb"),
     person("Mingyuan", "Zhang", , "mingyuan.z@nus.edu.sg", role = c("aut", "cre")),
@@ -22,7 +22,8 @@ Suggests:
     ompr.roi,
     pkgdown,
     rmarkdown,
-    ROI.plugin.glpk
+    ROI.plugin.glpk,
+    testthat (>= 3.0.0)
 VignetteBuilder: knitr
 Imports: 
     cluster,
@@ -34,3 +35,4 @@ Imports:
 Roxygen: list(markdown = TRUE)
 Depends: 
     R (>= 3.5)
+Config/testthat/edition: 3
