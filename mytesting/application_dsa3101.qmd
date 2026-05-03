@@ -8,6 +8,7 @@ library(grouper)
 library(ompr)
 library(ompr.roi)
 library(ROI.plugin.gurobi)
+library(tidyverse)
 ```
 
 * Set `mytesting` to be your working directory
