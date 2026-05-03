@@ -70,8 +70,9 @@ containing:
 }
 \description{
 Converts a dataframe with information on students to a list of parameters. This
-list forms one half of the inputs to prepare_model(). The other half comes from
-extract_params_yaml.
+list forms one half of the inputs to prepare_model(). The remaining model
+parameters can come from \code{\link[=extract_params_yaml]{extract_params_yaml()}} or be supplied directly to
+\code{\link[=prepare_model]{prepare_model()}} for non-YAML workflows.
 }
 \details{
 For the diversity-based assignment, the demographic variables are converted

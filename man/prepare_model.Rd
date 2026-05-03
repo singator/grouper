@@ -16,8 +16,9 @@ prepare_model(
 \arguments{
 \item{df_list}{Model input list.}
 
-\item{yaml_list}{Parameter list from \code{\link[=extract_params_yaml]{extract_params_yaml()}}. Required for
-\code{assignment = "diversity"} and \code{assignment = "preference"}. Ignored for
+\item{yaml_list}{Parameter list from \code{\link[=extract_params_yaml]{extract_params_yaml()}}. Optional for
+\code{assignment = "diversity"} and \code{assignment = "preference"} for backward
+compatibility. If supplied, this list is used directly. Ignored for
 \code{assignment = "phd"}.}
 
 \item{assignment}{Character string indicating model type. Must be one of
@@ -26,8 +27,14 @@ prepare_model(
 \item{w1, w2}{Numeric values between 0 and 1. Should sum to 1. Used only for
 \code{assignment = "diversity"}.}
 
-\item{...}{Additional arguments passed to \code{\link[=prepare_phd_model]{prepare_phd_model()}} when
-\code{assignment = "phd"}.}
+\item{...}{Additional arguments:
+\itemize{
+\item For \code{assignment = "diversity"} when \code{yaml_list} is \code{NULL}: supply
+\code{n_topics}, \code{R}, \code{nmin}, \code{nmax}, \code{rmin}, and \code{rmax}.
+\item For \code{assignment = "preference"} when \code{yaml_list} is \code{NULL}: supply
+\code{n_topics}, \code{B}, \code{R}, \code{nmin}, \code{nmax}, \code{rmin}, and \code{rmax}.
+\item For \code{assignment = "phd"}: passed to \code{\link[=prepare_phd_model]{prepare_phd_model()}}.
+}}
 }
 \value{
 An ompr model.

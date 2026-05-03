@@ -13,6 +13,34 @@ test_that("prepare_model wrapper dispatches and validates arguments", {
 
   m_div <- prepare_model(div_df, div_params, assignment = "diversity", w1 = 1, w2 = 0)
   expect_s3_class(m_div, "linear_optimization_model")
+  m_div_yaml_precedence <- prepare_model(
+    div_df,
+    div_params,
+    assignment = "diversity",
+    w1 = 1,
+    w2 = 0,
+    n_topics = 999,
+    R = 999,
+    nmin = 1,
+    nmax = 1,
+    rmin = 1,
+    rmax = 1
+  )
+  expect_s3_class(m_div_yaml_precedence, "linear_optimization_model")
+
+  m_div_no_yaml <- prepare_model(
+    div_df,
+    assignment = "diversity",
+    w1 = 1,
+    w2 = 0,
+    n_topics = 2,
+    R = 1,
+    nmin = 2,
+    nmax = 2,
+    rmin = 1,
+    rmax = 1
+  )
+  expect_s3_class(m_div_no_yaml, "linear_optimization_model")
 
   pref_df <- extract_student_info(
     pba_gc_ex002,
@@ -27,6 +55,32 @@ test_that("prepare_model wrapper dispatches and validates arguments", {
 
   m_pref <- prepare_model(pref_df, pref_params, assignment = "preference")
   expect_s3_class(m_pref, "linear_optimization_model")
+  m_pref_yaml_precedence <- prepare_model(
+    pref_df,
+    pref_params,
+    assignment = "preference",
+    n_topics = 999,
+    B = 999,
+    R = 999,
+    nmin = 1,
+    nmax = 1,
+    rmin = 1,
+    rmax = 1
+  )
+  expect_s3_class(m_pref_yaml_precedence, "linear_optimization_model")
+
+  m_pref_no_yaml <- prepare_model(
+    pref_df,
+    assignment = "preference",
+    n_topics = 2,
+    B = 2,
+    R = 1,
+    nmin = 2,
+    nmax = 2,
+    rmin = 1,
+    rmax = 1
+  )
+  expect_s3_class(m_pref_no_yaml, "linear_optimization_model")
 
   phd_df <- extract_phd_info(
     student_df = phd_students_ex001,
@@ -40,12 +94,29 @@ test_that("prepare_model wrapper dispatches and validates arguments", {
   expect_s3_class(m_phd, "linear_optimization_model")
 
   expect_error(
-    prepare_model(div_df, assignment = "diversity"),
-    "yaml_list must be provided"
+    prepare_model(
+      div_df,
+      assignment = "diversity",
+      R = 1,
+      nmin = 2,
+      nmax = 2,
+      rmin = 1,
+      rmax = 1
+    ),
+    "Missing required parameters.*n_topics"
   )
   expect_error(
-    prepare_model(pref_df, assignment = "preference"),
-    "yaml_list must be provided"
+    prepare_model(
+      pref_df,
+      assignment = "preference",
+      n_topics = 2,
+      R = 1,
+      nmin = 2,
+      nmax = 2,
+      rmin = 1,
+      rmax = 1
+    ),
+    "Missing required parameters.*B"
   )
 })
 
