@@ -1,3 +1,6 @@
+# grouper 0.6.2
+* Unified all three shiny app into a single app with 3 tabs.
+
 # grouper 0.6.1
 * Added wrapper functions for extracting information.
 * Added unit tests for main functions under R/

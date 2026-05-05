@@ -7,6 +7,7 @@ inst/doc
 /Meta/
 docs/
 .DS_Store
+check/
 
 # feature/mingyuan.
 data/phdModel
