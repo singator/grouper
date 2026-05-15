@@ -16,7 +16,6 @@ URL: https://Zimmy313.github.io/grouper/, https://github.com/Zimmy313/grouper
 BugReports: https://github.com/Zimmy313/grouper/issues
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.3.3
 Suggests: 
     knitr,
     ompr.roi,
@@ -34,3 +33,4 @@ Imports:
 Roxygen: list(markdown = TRUE)
 Depends: 
     R (>= 3.5)
+Config/roxygen2/version: 7.3.3.9000
