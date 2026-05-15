@@ -1,3 +1,5 @@
+# grouper 0.6.2
+
 # grouper 0.6.1
 
 # grouper 0.6.2
