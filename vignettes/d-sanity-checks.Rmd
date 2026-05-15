@@ -31,7 +31,7 @@ This vignette illustrates the use of the package on simple datasets, for which
 the optimal solutions are apparent from inspection.
 
 For each dataset below, we will use 2 workflows to run the optimisation. The 
-first workflow do not make use of the wrapper function `extract_info()` and 
+first workflow does not make use of the wrapper function `extract_info()` and 
 instead uses `extract_student_info()` and `extract_params_yaml()`.
 The alternative uses `extract_info()` as the extraction
 wrapper; for diversity and preference models it also demonstrates direct

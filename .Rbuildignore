@@ -11,3 +11,5 @@
 ^pkgdown$
 ^data/phdModel$
 ^\\.Rhistory$
+^\.positai$
+^\.claude$

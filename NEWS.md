@@ -1,8 +1,4 @@
 # grouper 0.6.2
-
-# grouper 0.6.1
-
-# grouper 0.6.2
 * Unified all three shiny apps into a single app with 3 tabs.
 
 # grouper 0.6.1

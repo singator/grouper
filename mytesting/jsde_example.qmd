@@ -8,6 +8,7 @@ library(grouper)
 library(ompr)
 library(ompr.roi)
 library(ROI.plugin.gurobi)
+library(ROI.plugin.glpk)
 ```
 
 ```{r}
@@ -29,7 +30,8 @@ df_list <- extract_student_info(group_comp_jsde, "preference",
                                 pref_mat = pref_mat)
 yaml_list <- extract_params_yaml("jsde_input.yml", "preference")
 mdl_jsde <- prepare_model(df_list, yaml_list, "preference")
-result <- solve_model(mdl_jsde, with_ROI(solver="gurobi", verbose=TRUE))
+#result <- solve_model(mdl_jsde, with_ROI(solver="gurobi", verbose=TRUE))
+result <- solve_model(mdl_jsde, with_ROI(solver="glpk", verbose=TRUE))
 groupr_assigned_df1 <- assign_groups(result, assignment = "preference",  
                                      dframe=group_comp_jsde, yaml_list, 
                                      group_names="g_id")
