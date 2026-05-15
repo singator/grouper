@@ -3,6 +3,7 @@
 export("%>%")
 export(assign_groups)
 export(assign_job)
+export(extract_info)
 export(extract_params_yaml)
 export(extract_phd_info)
 export(extract_student_info)

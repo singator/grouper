@@ -1,8 +1,9 @@
 #' Extract student information
 #'
 #' Converts a dataframe with information on students to a list of parameters. This
-#' list forms one half of the inputs to prepare_model(). The other half comes from
-#' extract_params_yaml.
+#' list forms one half of the inputs to prepare_model(). The remaining model
+#' parameters can come from [extract_params_yaml()] or be supplied directly to
+#' [prepare_model()] for non-YAML workflows.
 #'
 #' @param dframe A dataframe with one row for each student. The columns could
 #'   possibly contain demographic variables, an overall skill measure, and a
@@ -257,6 +258,58 @@ extract_phd_info <- function(student_df, p_mat, d_mat,
     t1 = t1,
     g1 = g1
   )
+}
+
+
+
+#' Extract model inputs (wrapper)
+#'
+#' Wrapper around [extract_student_info()] and [extract_phd_info()].
+#'
+#' @param assignment Character string indicating model type. Must be one of
+#'   `"diversity"`, `"preference"`, or `"phd"`.
+#' @param ... Additional arguments. Brief requirements by assignment:
+#'   * `assignment = "diversity"`: requires `dframe`, `self_formed_groups`, and
+#'     either `demographic_cols` (when `d_mat` is not supplied) or `d_mat`;
+#'     `skills` is optional.
+#'   * `assignment = "preference"`: requires `dframe`, `self_formed_groups`,
+#'     and `pref_mat`.
+#'   * `assignment = "phd"`: requires `student_df`, `p_mat`, and `d_mat`;
+#'     `e_mode` and `C` are optional.
+#'
+#' @details
+#' Explicit argument guide by assignment:
+#'
+#' * For `assignment = "diversity"`, `extract_info()` forwards `...` to
+#'   [extract_student_info()]. Provide `dframe` and `self_formed_groups`.
+#'   Then either provide `d_mat`, or provide `demographic_cols` so Gower
+#'   dissimilarity is computed internally. `skills` can be supplied or set to
+#'   `NULL`.
+#'
+#' * For `assignment = "preference"`, `extract_info()` forwards `...` to
+#'   [extract_student_info()]. Provide `dframe`, `self_formed_groups`, and
+#'   `pref_mat`.
+#'
+#' * For `assignment = "phd"`, `extract_info()` forwards `...` to
+#'   [extract_phd_info()]. Provide `student_df`, `p_mat`, and `d_mat`. Optional
+#'   `e_mode` and `C` use defaults from [extract_phd_info()].
+#'
+#' This wrapper does not parse YAML files. YAML-based parameter extraction
+#' remains available via [extract_params_yaml()].
+#'
+#' @returns A model input list from [extract_student_info()] or
+#'   [extract_phd_info()].
+#' @export
+extract_info <- function(assignment = c("diversity", "preference", "phd"), ...) {
+  assignment <- match.arg(assignment)
+  args <- list(...)
+
+  if (assignment %in% c("diversity", "preference")) {
+    args$assignment <- assignment
+    return(do.call(extract_student_info, args))
+  }
+
+  do.call(extract_phd_info, args)
 }
 
 

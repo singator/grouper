@@ -318,18 +318,92 @@ prepare_phd_model <- function(df_list, t_max_y1 = 1, e_max = NULL,
 }
 
 
+prepare_model_params_from_dots <- function(assignment, dots) {
+  required_fields <- if (assignment == "diversity") {
+    c("n_topics", "R", "nmin", "nmax", "rmin", "rmax")
+  } else {
+    c("n_topics", "B", "R", "nmin", "nmax", "rmin", "rmax")
+  }
+
+  missing_fields <- required_fields[vapply(
+    required_fields,
+    function(x) is.null(dots[[x]]),
+    logical(1)
+  )]
+
+  if (length(missing_fields) > 0) {
+    stop(
+      "Missing required parameters for assignment = '", assignment, "': ",
+      paste(missing_fields, collapse = ", "), "."
+    )
+  }
+
+  if (assignment == "diversity") {
+    nmin <- matrix(
+      data = dots$nmin,
+      nrow = dots$n_topics,
+      ncol = dots$R,
+      byrow = TRUE
+    )
+    nmax <- matrix(
+      data = dots$nmax,
+      nrow = dots$n_topics,
+      ncol = dots$R,
+      byrow = TRUE
+    )
+
+    return(list(
+      n_topics = dots$n_topics,
+      R = dots$R,
+      nmin = nmin,
+      nmax = nmax,
+      rmin = dots$rmin,
+      rmax = dots$rmax
+    ))
+  }
+
+  nmin <- matrix(
+    data = dots$nmin,
+    nrow = dots$B * dots$n_topics,
+    ncol = dots$R,
+    byrow = TRUE
+  )
+  nmax <- matrix(
+    data = dots$nmax,
+    nrow = dots$B * dots$n_topics,
+    ncol = dots$R,
+    byrow = TRUE
+  )
+
+  list(
+    n_topics = dots$n_topics,
+    B = dots$B,
+    R = dots$R,
+    nmin = nmin,
+    nmax = nmax,
+    rmin = dots$rmin,
+    rmax = dots$rmax
+  )
+}
+
+
 #' Initialise optimisation model (wrapper)
 #'
 #' @param df_list Model input list.
-#' @param yaml_list Parameter list from [extract_params_yaml()]. Required for
-#'   `assignment = "diversity"` and `assignment = "preference"`. Ignored for
+#' @param yaml_list Parameter list from [extract_params_yaml()]. Optional for
+#'   `assignment = "diversity"` and `assignment = "preference"` for backward
+#'   compatibility. If supplied, this list is used directly. Ignored for
 #'   `assignment = "phd"`.
 #' @param assignment Character string indicating model type. Must be one of
 #'   `"diversity"`, `"preference"`, or `"phd"`.
 #' @param w1,w2 Numeric values between 0 and 1. Should sum to 1. Used only for
 #'   `assignment = "diversity"`.
-#' @param ... Additional arguments passed to [prepare_phd_model()] when
-#'   `assignment = "phd"`.
+#' @param ... Additional arguments:
+#'   * For `assignment = "diversity"` when `yaml_list` is `NULL`: supply
+#'     `n_topics`, `R`, `nmin`, `nmax`, `rmin`, and `rmax`.
+#'   * For `assignment = "preference"` when `yaml_list` is `NULL`: supply
+#'     `n_topics`, `B`, `R`, `nmin`, `nmax`, `rmin`, and `rmax`.
+#'   * For `assignment = "phd"`: passed to [prepare_phd_model()].
 #'
 #' @returns An ompr model.
 #' @export
@@ -337,20 +411,25 @@ prepare_model <- function(df_list, yaml_list = NULL,
                           assignment = c("diversity", "preference", "phd"),
                           w1 = 0.5, w2 = 0.5, ...) {
   assignment <- match.arg(assignment)
+  dots <- list(...)
 
   if (assignment == "diversity") {
-    if (is.null(yaml_list)) {
-      stop("yaml_list must be provided for assignment = 'diversity'.")
+    params_list <- if (is.null(yaml_list)) {
+      prepare_model_params_from_dots(assignment = assignment, dots = dots)
+    } else {
+      yaml_list
     }
-    return(prepare_diversity_model(df_list, yaml_list, w1 = w1, w2 = w2))
+    return(prepare_diversity_model(df_list, params_list, w1 = w1, w2 = w2))
   }
 
   if (assignment == "preference") {
-    if (is.null(yaml_list)) {
-      stop("yaml_list must be provided for assignment = 'preference'.")
+    params_list <- if (is.null(yaml_list)) {
+      prepare_model_params_from_dots(assignment = assignment, dots = dots)
+    } else {
+      yaml_list
     }
-    return(prepare_preference_model(df_list, yaml_list))
+    return(prepare_preference_model(df_list, params_list))
   }
 
-  prepare_phd_model(df_list, ...)
+  do.call(prepare_phd_model, c(list(df_list = df_list), dots))
 }
