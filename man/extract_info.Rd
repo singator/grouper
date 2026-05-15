@@ -10,16 +10,7 @@ extract_info(assignment = c("diversity", "preference", "phd"), ...)
 \item{assignment}{Character string indicating model type. Must be one of
 \code{"diversity"}, \code{"preference"}, or \code{"phd"}.}
 
-\item{...}{Additional arguments. Brief requirements by assignment:
-\itemize{
-\item \code{assignment = "diversity"}: requires \code{dframe}, \code{self_formed_groups}, and
-either \code{demographic_cols} (when \code{d_mat} is not supplied) or \code{d_mat};
-\code{skills} is optional.
-\item \code{assignment = "preference"}: requires \code{dframe}, \code{self_formed_groups},
-and \code{pref_mat}.
-\item \code{assignment = "phd"}: requires \code{student_df}, \code{p_mat}, and \code{d_mat};
-\code{e_mode} and \code{C} are optional.
-}}
+\item{...}{Additional arguments for the underlying extraction functions. See Details.}
 }
 \value{
 A model input list from \code{\link[=extract_student_info]{extract_student_info()}} or
@@ -32,16 +23,47 @@ Wrapper around \code{\link[=extract_student_info]{extract_student_info()}} and \
 Explicit argument guide by assignment:
 \itemize{
 \item For \code{assignment = "diversity"}, \code{extract_info()} forwards \code{...} to
-\code{\link[=extract_student_info]{extract_student_info()}}. Provide \code{dframe} and \code{self_formed_groups}.
-Then either provide \code{d_mat}, or provide \code{demographic_cols} so Gower
-dissimilarity is computed internally. \code{skills} can be supplied or set to
-\code{NULL}.
+\code{\link[=extract_student_info]{extract_student_info()}}.
+
+Required arguments:
+\itemize{
+\item \code{dframe}
+\item \code{self_formed_groups}
+\item either:
+\itemize{
+\item \code{d_mat}, or
+\item \code{demographic_cols}, so Gower dissimilarity is computed internally
+}
+}
+
+Optional arguments:
+\itemize{
+\item \code{skills}, which can be supplied or set to \code{NULL}
+}
 \item For \code{assignment = "preference"}, \code{extract_info()} forwards \code{...} to
-\code{\link[=extract_student_info]{extract_student_info()}}. Provide \code{dframe}, \code{self_formed_groups}, and
-\code{pref_mat}.
+\code{\link[=extract_student_info]{extract_student_info()}}.
+
+Required arguments:
+\itemize{
+\item \code{dframe}
+\item \code{self_formed_groups}
+\item \code{pref_mat}
+}
 \item For \code{assignment = "phd"}, \code{extract_info()} forwards \code{...} to
-\code{\link[=extract_phd_info]{extract_phd_info()}}. Provide \code{student_df}, \code{p_mat}, and \code{d_mat}. Optional
-\code{e_mode} and \code{C} use defaults from \code{\link[=extract_phd_info]{extract_phd_info()}}.
+\code{\link[=extract_phd_info]{extract_phd_info()}}.
+
+Required arguments:
+\itemize{
+\item \code{student_df}
+\item \code{p_mat}
+\item \code{d_mat}
+}
+
+Optional arguments:
+\itemize{
+\item \code{e_mode}, which uses the default from \code{\link[=extract_phd_info]{extract_phd_info()}}
+\item \code{C}, which uses the default from \code{\link[=extract_phd_info]{extract_phd_info()}}
+}
 }
 
 This wrapper does not parse YAML files. YAML-based parameter extraction

@@ -28,6 +28,7 @@ reference:
   - prepare_phd_model
   - prepare_preference_model
   - extract_params_yaml
+  - extract_info
   - extract_student_info
   - extract_phd_info
 - title: Optimization

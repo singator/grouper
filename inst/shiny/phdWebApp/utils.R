@@ -111,62 +111,23 @@ validate_current_semester_file <- function(path) {
   list(students = students, demand = demand)
 }
 
-validate_previous_output_df <- function(df) {
-  if (!"Name" %in% names(df)) {
+# ---- Core Parsing Helpers ----
+
+summarise_past_workload <- function(previous_output) {
+  if (!"Name" %in% names(previous_output)) {
     stop("Previous semester output must contain a Name column.")
   }
 
-  ta_cols <- grep("-t$", names(df), value = TRUE, ignore.case = TRUE)
-  gr_cols <- grep("-g$", names(df), value = TRUE, ignore.case = TRUE)
-  if (length(ta_cols) == 0 || length(gr_cols) == 0) {
-    stop(
-      "Previous semester output must contain course-role columns ending in '-t' and '-g' ",
-      "from assign_job() output."
-    )
-  }
-
-  invisible(TRUE)
-}
-
-
-# ---- Core Parsing Helpers ----
-coerce_nonneg_integer <- function(x, label) {
-  num <- suppressWarnings(as.numeric(x))
-  invalid_na <- is.na(num) & !(is.na(x) | trimws(as.character(x)) == "")
-  if (any(invalid_na)) {
-    stop(label, " contains non-numeric values.")
-  }
-
-  num[is.na(num)] <- 0
-  if (any(num < 0)) {
-    stop(label, " cannot contain negative values.")
-  }
-  if (any(abs(num - round(num)) > 1e-8)) {
-    stop(label, " must contain integer unit values.")
-  }
-
-  as.integer(round(num))
-}
-
-summarise_past_workload <- function(previous_output) {
-  validate_previous_output_df(previous_output)
-
   ta_cols <- grep("-t$", names(previous_output), value = TRUE, ignore.case = TRUE)
   gr_cols <- grep("-g$", names(previous_output), value = TRUE, ignore.case = TRUE)
-
-  ta_vals <- lapply(ta_cols, function(col_nm) coerce_nonneg_integer(previous_output[[col_nm]], col_nm))
-  gr_vals <- lapply(gr_cols, function(col_nm) coerce_nonneg_integer(previous_output[[col_nm]], col_nm))
-
-  ta_sum <- if (length(ta_vals) > 0) {
-    rowSums(as.data.frame(ta_vals, check.names = FALSE), na.rm = TRUE)
-  } else {
-    rep(0, nrow(previous_output))
+  if (length(ta_cols) == 0 || length(gr_cols) == 0) {
+    stop("Previous semester output must contain course-role columns ending in '-t' and '-g'.")
   }
-  gr_sum <- if (length(gr_vals) > 0) {
-    rowSums(as.data.frame(gr_vals, check.names = FALSE), na.rm = TRUE)
-  } else {
-    rep(0, nrow(previous_output))
-  }
+
+  ta_mat <- suppressWarnings(data.matrix(previous_output[, ta_cols, drop = FALSE]))
+  gr_mat <- suppressWarnings(data.matrix(previous_output[, gr_cols, drop = FALSE]))
+  ta_sum <- rowSums(ta_mat, na.rm = TRUE)
+  gr_sum <- rowSums(gr_mat, na.rm = TRUE)
 
   out <- data.frame(
     name_key = standardise_name(previous_output$Name),
@@ -184,6 +145,40 @@ summarise_past_workload <- function(previous_output) {
       past_gr = sum(.data$past_gr, na.rm = TRUE),
       .groups = "drop"
     )
+}
+
+# Enforce model assumption on prior semester totals.
+# Rule: past_ta + past_gr must equal C for each current student.
+# If below C, pad deficit into past_gr. If above C, block run.
+enforce_past_workload_capacity <- function(students_joined, C) {
+  past_total <- as.numeric(students_joined$past_ta) + as.numeric(students_joined$past_gr)
+  over_idx <- which(past_total > (C + 1e-8))
+
+  if (length(over_idx) > 0) {
+    over_details <- paste0(
+      students_joined$Name[over_idx],
+      " (total=",
+      format(round(past_total[over_idx], 3), trim = TRUE),
+      ")"
+    )
+    over_details <- paste(utils::head(over_details, 8), collapse = ", ")
+    if (length(over_idx) > 8) {
+      over_details <- paste0(over_details, ", ...")
+    }
+
+    stop(
+      "Previous semester workload exceeds C for ",
+      length(over_idx),
+      " student(s): ",
+      over_details,
+      ". Set C >= each student's prior total or fix previous output."
+    )
+  }
+
+  deficit <- pmax(0, C - past_total)
+  students_joined$past_gr <- as.numeric(students_joined$past_gr) + deficit
+  students_joined$past_ta <- as.numeric(students_joined$past_ta)
+  students_joined
 }
 
 build_preference_matrix <- function(students_clean, course_codes) {
@@ -222,9 +217,6 @@ prepare_phd_run_inputs <- function(students, demand, previous_output, C = 4) {
   if (!is.numeric(C) || length(C) != 1 || is.na(C) || C <= 0) {
     stop("C must be a single positive number.")
   }
-  if (abs(C - round(C)) > 1e-8) {
-    stop("C must be an integer unit cap.")
-  }
   C <- as.integer(round(C))
 
   students_clean <- students %>%
@@ -236,13 +228,6 @@ prepare_phd_run_inputs <- function(students, demand, previous_output, C = 4) {
       second = clean_pref_code(.data$second),
       third = clean_pref_code(.data$third)
     )
-
-  if (nrow(students_clean) == 0) {
-    stop("students tab is empty.")
-  }
-  if (any(is.na(students_clean$student_id) | trimws(as.character(students_clean$student_id)) == "")) {
-    stop("students.student_id cannot be empty.")
-  }
   if (any(duplicated(students_clean$student_id))) {
     stop("students.student_id must be unique.")
   }
@@ -251,18 +236,8 @@ prepare_phd_run_inputs <- function(students, demand, previous_output, C = 4) {
   }
 
   students_clean$name_key <- standardise_name(students_clean$Name)
-  if (any(students_clean$name_key == "")) {
-    stop("students.Name contains invalid values after standardisation.")
-  }
   if (any(duplicated(students_clean$name_key))) {
     stop("Standardised student names are not unique; cannot safely match previous output by Name.")
-  }
-
-  if (any(is.na(students_clean$year))) {
-    stop("students.year must be numeric.")
-  }
-  if (any(abs(students_clean$year - round(students_clean$year)) > 1e-8)) {
-    stop("students.year must contain integer values.")
   }
   students_clean$year <- as.integer(round(students_clean$year))
 
@@ -273,24 +248,8 @@ prepare_phd_run_inputs <- function(students, demand, previous_output, C = 4) {
       GR = suppressWarnings(as.numeric(.data$GR))
     )
 
-  if (nrow(demand_clean) == 0) {
-    stop("demand tab is empty.")
-  }
-  if (any(is.na(demand_clean$course_code) | demand_clean$course_code == "")) {
-    stop("demand.course_code cannot be empty.")
-  }
   if (any(duplicated(demand_clean$course_code))) {
     stop("demand.course_code must be unique.")
-  }
-  if (any(is.na(demand_clean$TA)) || any(is.na(demand_clean$GR))) {
-    stop("demand TA/GR values must be numeric.")
-  }
-  if (any(demand_clean$TA < 0) || any(demand_clean$GR < 0)) {
-    stop("demand TA/GR values cannot be negative.")
-  }
-  if (any(abs(demand_clean$TA - round(demand_clean$TA)) > 1e-8) ||
-      any(abs(demand_clean$GR - round(demand_clean$GR)) > 1e-8)) {
-    stop("demand TA/GR values must be integers.")
   }
 
   demand_clean$TA <- as.integer(round(demand_clean$TA))
@@ -312,6 +271,7 @@ prepare_phd_run_inputs <- function(students, demand, previous_output, C = 4) {
 
   students_joined$past_ta[is.na(students_joined$past_ta)] <- 0
   students_joined$past_gr[is.na(students_joined$past_gr)] <- 0
+  students_joined <- enforce_past_workload_capacity(students_joined, C)
 
   student_input <- students_joined %>%
     dplyr::transmute(
@@ -397,13 +357,9 @@ summarise_assignment_from_job_output <- function(assignment_tbl, students_df) {
     stop("assignment_tbl is missing one or more expected role columns (-t/-g/-e).")
   }
 
-  ta_vals <- lapply(ta_cols, function(col_nm) coerce_nonneg_integer(assignment_tbl[[col_nm]], col_nm))
-  gr_vals <- lapply(gr_cols, function(col_nm) coerce_nonneg_integer(assignment_tbl[[col_nm]], col_nm))
-  e_vals <- lapply(e_cols, function(col_nm) coerce_nonneg_integer(assignment_tbl[[col_nm]], col_nm))
-
-  ta_total <- rowSums(as.data.frame(ta_vals, check.names = FALSE), na.rm = TRUE)
-  gr_total <- rowSums(as.data.frame(gr_vals, check.names = FALSE), na.rm = TRUE)
-  e_total <- rowSums(as.data.frame(e_vals, check.names = FALSE), na.rm = TRUE)
+  ta_total <- rowSums(suppressWarnings(data.matrix(assignment_tbl[, ta_cols, drop = FALSE])), na.rm = TRUE)
+  gr_total <- rowSums(suppressWarnings(data.matrix(assignment_tbl[, gr_cols, drop = FALSE])), na.rm = TRUE)
+  e_total <- rowSums(suppressWarnings(data.matrix(assignment_tbl[, e_cols, drop = FALSE])), na.rm = TRUE)
 
   data.frame(
     student_id = students_df$student_id,

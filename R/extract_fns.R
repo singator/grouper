@@ -268,31 +268,43 @@ extract_phd_info <- function(student_df, p_mat, d_mat,
 #'
 #' @param assignment Character string indicating model type. Must be one of
 #'   `"diversity"`, `"preference"`, or `"phd"`.
-#' @param ... Additional arguments. Brief requirements by assignment:
-#'   * `assignment = "diversity"`: requires `dframe`, `self_formed_groups`, and
-#'     either `demographic_cols` (when `d_mat` is not supplied) or `d_mat`;
-#'     `skills` is optional.
-#'   * `assignment = "preference"`: requires `dframe`, `self_formed_groups`,
-#'     and `pref_mat`.
-#'   * `assignment = "phd"`: requires `student_df`, `p_mat`, and `d_mat`;
-#'     `e_mode` and `C` are optional.
+#' @param ... Additional arguments for the underlying extraction functions. See Details.
 #'
 #' @details
 #' Explicit argument guide by assignment:
 #'
-#' * For `assignment = "diversity"`, `extract_info()` forwards `...` to
-#'   [extract_student_info()]. Provide `dframe` and `self_formed_groups`.
-#'   Then either provide `d_mat`, or provide `demographic_cols` so Gower
-#'   dissimilarity is computed internally. `skills` can be supplied or set to
-#'   `NULL`.
+#' - For `assignment = "diversity"`, `extract_info()` forwards `...` to
+#'   [extract_student_info()].
 #'
-#' * For `assignment = "preference"`, `extract_info()` forwards `...` to
-#'   [extract_student_info()]. Provide `dframe`, `self_formed_groups`, and
-#'   `pref_mat`.
+#'   Required arguments:
+#'   - `dframe`
+#'   - `self_formed_groups`
+#'   - either:
+#'     - `d_mat`, or
+#'     - `demographic_cols`, so Gower dissimilarity is computed internally
 #'
-#' * For `assignment = "phd"`, `extract_info()` forwards `...` to
-#'   [extract_phd_info()]. Provide `student_df`, `p_mat`, and `d_mat`. Optional
-#'   `e_mode` and `C` use defaults from [extract_phd_info()].
+#'   Optional arguments:
+#'   - `skills`, which can be supplied or set to `NULL`
+#'
+#' - For `assignment = "preference"`, `extract_info()` forwards `...` to
+#'   [extract_student_info()].
+#'
+#'   Required arguments:
+#'   - `dframe`
+#'   - `self_formed_groups`
+#'   - `pref_mat`
+#'
+#' - For `assignment = "phd"`, `extract_info()` forwards `...` to
+#'   [extract_phd_info()].
+#'
+#'   Required arguments:
+#'   - `student_df`
+#'   - `p_mat`
+#'   - `d_mat`
+#'
+#'   Optional arguments:
+#'   - `e_mode`, which uses the default from [extract_phd_info()]
+#'   - `C`, which uses the default from [extract_phd_info()]
 #'
 #' This wrapper does not parse YAML files. YAML-based parameter extraction
 #' remains available via [extract_params_yaml()].

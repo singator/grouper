@@ -287,7 +287,6 @@ server <- function(input, output, session) {
     out <- tryCatch({
       current <- validate_current_semester_file(input$current_file$datapath)
       prev <- read_uploaded_table(input$past_file$datapath)
-      validate_previous_output_df(prev)
 
       list(students = current$students, demand = current$demand, past_output = prev)
     }, error = function(e) {

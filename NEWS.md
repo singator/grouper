@@ -1,3 +1,11 @@
+# grouper 0.6.2
+* Unified all three shiny apps into a single app with 3 tabs.
+
+# grouper 0.6.1
+* Added wrapper functions for extracting information.
+* Added unit tests for main functions under R/
+* Added shiny app for PhD workload allocation model.
+
 # grouper 0.6.0
 * Added a PhD workload allocation model, with associated extraction and post-processing functions.
 * Modularized model preparation and added a wrapper for easier use.

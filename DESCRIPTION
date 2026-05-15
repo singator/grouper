@@ -1,7 +1,7 @@
 Package: grouper
 Type: Package
 Title: Optimal Assignment of Students to Groups
-Version: 0.5.1
+Version: 0.6.2
 Authors@R: c(
     person("Vik", "Gopal", , "vik.gopal@nus.edu.sg", role = "aut"),
     person("Kevin", "Lam", , "lamfy@nus.edu.sg", role = "aut"),
@@ -36,3 +36,4 @@ Depends:
     R (>= 3.5)
 Config/roxygen2/version: 7.3.3.9000
 Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0

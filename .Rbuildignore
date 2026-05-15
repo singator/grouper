@@ -13,3 +13,5 @@
 ^\.claude$
 ^data/phdModel$
 ^\\.Rhistory$
+^\.positai$
+^\.claude$
